@@ -1,0 +1,19 @@
+{
+  "name": "willing-server",
+  "version": "1.0.0",
+  "description": "",
+  "license": "MIT",
+  "author": "willing",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "tsc && node dist/index.js"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
