@@ -1,18 +1,31 @@
 {
-  "name": "server",
+  "name": "willing-server",
   "version": "1.0.0",
   "description": "",
+  "license": "MIT",
+  "author": "willing",
+  "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "tsc && node dist/index.js",
+    "migrate": "tsc && node dist/db/migrate.js",
+    "lint": "eslint . --fix"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
+  "devDependencies": {
+    "@stylistic/eslint-plugin": "^5.7.1",
+    "@types/express": "^5.0.6",
+    "@types/morgan": "^1.9.10",
+    "@types/pg": "^8.16.0",
+    "eslint": "^9.39.2",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.54.0"
+  },
   "dependencies": {
-    "cors": "^2.8.6",
     "dotenv": "^17.2.3",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "kysely": "^0.28.10",
+    "pg": "^8.17.2",
+    "zod": "^4.3.6"
   }
 }
+
