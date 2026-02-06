@@ -61,7 +61,7 @@ export default function VolunteerCreate() {
 
     localStorage.setItem('jwt', response.token);
 
-    navigate('/');
+    navigate('/volunteer');
   };
 
   return (
