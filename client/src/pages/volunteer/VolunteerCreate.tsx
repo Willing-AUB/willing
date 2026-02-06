@@ -135,7 +135,11 @@ export default function VolunteerCreate() {
               <option value="other">Other</option>
             </select>
 
-            <button type="submit" className="btn btn-primary mt-4">
+            <button 
+              className="btn btn-primary mt-4"
+              type="submit"
+              disabled={!firstName || !lastName || !email || !password || !dateOfBirth || !gender}
+            >
               Register
             </button>
           </form>
