@@ -115,7 +115,11 @@ export default function OrgRegPage() {
                 </div>
               </div>
 
-              <button className="btn btn-primary mt-4" type="submit">
+              <button 
+                className="btn btn-primary mt-4" 
+                type="submit"
+                disabled={!form.name || !form.email || !form.phone_number || !form.url || !form.location_name}
+              >
                 Request Account
               </button>
             </fieldset>
