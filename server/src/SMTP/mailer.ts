@@ -21,10 +21,21 @@ export async function sendEmail(opts: {
   subject: string;
   text: string;
 }) {
-  return transporter.sendMail({
-    from: MAIL_FROM,
-    to: opts.to,
-    subject: opts.subject,
-    text: opts.text,
-  });
+  if (config.NODE_ENV === 'production') {
+    return transporter.sendMail({
+      from: MAIL_FROM,
+      to: opts.to,
+      subject: opts.subject,
+      text: opts.text,
+    });
+  } else {
+    const output = '\n'
+      + '======== [DEV] SENT EMAIL ========\n'
+      + `To: ${opts.to}\n`
+      + `Subject: ${opts.subject}\n`
+      + `Text:\n`
+      + `${opts.text.split('\n').map(s => '    ' + s).join('\n')}\n`
+      + '==================================\n';
+    console.log(output);
+  }
 }

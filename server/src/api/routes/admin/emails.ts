@@ -14,13 +14,12 @@ export async function sendOrganizationAcceptanceEmail(
   const text
     = `Hello ${organizationRequest.name},\n\n`
       + `Your organization request has been accepted.\n\n`
-      + `Temporary credentials:\n`
-      + `Email/Username: ${to}\n`
-      + `Temporary password: ${password}\n\n`
-      + `Login: ${config.CLIENT_URL}\n\n`
+      + `Credentials:\n`
+      + `    Email: ${to}\n`
+      + `    Temporary password: ${password}\n\n`
+      + `Login: ${config.CLIENT_URL}/login\n\n`
       + `Please change your password after logging in.\n\n`
-      + `Willing Team\n`
-      + `Automated message. Do not reply.`;
+      + `Willing Team`;
 
   await sendEmail({ to, subject, text });
 }
@@ -44,8 +43,7 @@ export async function sendOrganizationRejectionEmail(
       + reasonBlock
       + `If you believe this was a mistake, you can submit a new request with updated information.\n`
       + 'For any extra questions, please contact us at willing.aub@gmail.com.\n\n'
-      + `Willing Team\n`
-      + `Automated message. Do not reply.`;
+      + `Willing Team`;
 
   await sendEmail({ to, subject, text });
 }
@@ -62,7 +60,7 @@ export async function sendAdminOrganizationRequestEmail(
       + `Phone: ${organizationRequest.phone_number ?? '—'}\n`
       + `Website: ${organizationRequest.url ?? '—'}\n`
       + `Location: ${organizationRequest.location_name}\n\n`
-      + `Review it in the admin dashboard: ${config.CLIENT_URL + '/admin'}\n`;
+      + `Review it in the admin dashboard: ${config.CLIENT_URL + '/admin'}`;
   const emails = (await db.selectFrom('admin_account').select(['email']).execute()).map(row => row.email);
   await sendEmail({
     to: emails.join(', '),
