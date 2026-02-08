@@ -76,6 +76,11 @@ This project is built using a modern frontend and backend stack with TypeScript,
 - **Express 🚂**  
   - Lightweight web framework for Node.js.  
   - Helps define routes, handle requests/responses, and structure the backend efficiently.
+ 
+- **Zod ✅**  
+  - TypeScript-first schema validation library.  
+  - Used to validate and parse data at runtime.  
+  - Ensures user inputs and API requests match expected schemas before reaching business logic.
 
 ---
 
@@ -110,3 +115,7 @@ This project is built using a modern frontend and backend stack with TypeScript,
 - **Docker 🐳**  
   - Ensures the project runs the same way on every machine.  
   - Eliminates issues like different Node versions, missing dependencies, or OS differences between team members.
+
+- **GitHub Projects 📋**  
+  - Used for project management and team coordination.  
+  - Helps track tasks, features, bugs, and progress across the team using boards and issues.
