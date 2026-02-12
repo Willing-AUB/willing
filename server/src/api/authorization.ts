@@ -1,7 +1,7 @@
 import { RequestHandler } from 'express';
-import jwt from 'jsonwebtoken';
+import * as jose from 'jose';
 import config from '../config.js';
-import { UserJWT } from '../types/types.js';
+import { UserJWT } from '../types.js';
 
 export const authorizeOnly = (...roles: ('admin' | 'organization' | 'volunteer')[]) => {
   return ((req, res, next) => {
@@ -14,7 +14,7 @@ export const authorizeOnly = (...roles: ('admin' | 'organization' | 'volunteer')
   }) as RequestHandler;
 };
 
-export const setUserJWT = ((req, res, next) => {
+export const setUserJWT = (async (req, res, next) => {
   if (!req.headers.authorization) {
     next();
     return;
@@ -27,8 +27,8 @@ export const setUserJWT = ((req, res, next) => {
   }
 
   try {
-    const validated = jwt.verify(token, config.JWT_SECRET) as UserJWT;
-    req.userJWT = validated;
+    const { payload } = await jose.jwtVerify<UserJWT>(token, new TextEncoder().encode(config.JWT_SECRET));
+    req.userJWT = payload;
   } catch {
     // If parsing the jwt failed, consider the user not logged in
   }

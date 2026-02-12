@@ -1,6 +1,8 @@
 import { Outlet, useLocation, useNavigate } from 'react-router';
 import { useCallback, useContext, useEffect } from 'react';
+import * as jose from 'jose';
 import VolunteerContext, { VolunteerProvider } from './VolunteerContext';
+import type { UserJWT } from '../../../../server/src/types';
 
 function VolunteerPageInner() {
   const navigate = useNavigate();
@@ -14,14 +16,19 @@ function VolunteerPageInner() {
     if (!jwt) {
       navigate('/login');
     } else {
-      refreshVolunteer();
+      const { role } = jose.decodeJwt<UserJWT>(jwt);
+      if (role === 'volunteer') {
+        refreshVolunteer();
+      } else {
+        navigate('/' + role);
+      }
     }
   }, [location.pathname, navigate, refreshVolunteer]);
 
   const handleLogout = useCallback(() => {
     (document.activeElement as HTMLElement)?.blur();
     logout();
-    navigate('/login');
+    navigate('/');
   }, [logout, navigate]);
 
   return (
