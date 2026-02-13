@@ -32,7 +32,6 @@ export const volunteerAccountSchema = zod.object({
     .refine(str => !isNaN(Date.parse(str)), { message: 'Invalid date format' }),
   gender: zod.enum(['male', 'female', 'other'], 'Gender should be \'female\', \'male\', or \'other\' '),
   description: zod.string().optional(),
-  skills: zod.string().optional(),
 });
 export type VolunteerAccount = zod.infer<typeof volunteerAccountSchema>;
 
@@ -147,8 +146,7 @@ export const OrganizationPostingSchema = zod.object({
   start_timestamp: zod.date({ message: 'Start time is required and must be a valid date' }),
   end_timestamp: zod.date({ message: 'End time must be a valid date' }).optional(),
   minimum_age: zod.number().optional(),
-  skills: zod.string().optional(),
-  status: zod.boolean().default(true),
+  is_open: zod.boolean().default(true),
 });
 
 export type OrganizationPosting = zod.infer<typeof OrganizationPostingSchema>;
