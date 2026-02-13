@@ -1,9 +1,9 @@
 import { createContext, useState, useCallback, useEffect, type ReactNode } from 'react';
-import type { OrganizationAccount } from '../../../../server/src/db/types';
+import type { OrganizationAccountWithoutPassword } from '../../../../server/src/db/tables';
 import requestServer from '../../requestServer';
 
 type OrganizationContextType = {
-  organization?: OrganizationAccount;
+  organization?: OrganizationAccountWithoutPassword;
   refreshOrganization: () => void;
   logout: () => void;
 };
@@ -15,7 +15,7 @@ const OrganizationContext = createContext<OrganizationContextType>({
 });
 
 export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
-  const [organization, setOrganization] = useState<OrganizationAccount | undefined>(undefined);
+  const [organization, setOrganization] = useState<OrganizationAccountWithoutPassword | undefined>(undefined);
 
   const refreshOrganization = useCallback(() => {
     const jwt = localStorage.getItem('jwt');
@@ -24,7 +24,7 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    requestServer<{ organization: OrganizationAccount }>('/organization/me', {}, true)
+    requestServer<{ organization: OrganizationAccountWithoutPassword }>('/organization/me', {}, true)
       .then(response => setOrganization(response.organization))
       .catch(() => setOrganization(undefined));
   }, []);

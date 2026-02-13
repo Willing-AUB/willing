@@ -1,19 +1,17 @@
 import { Router } from 'express';
 import zod from 'zod';
-import jwt from 'jsonwebtoken';
+import * as jose from 'jose';
 import bcrypt from 'bcrypt';
 import database from '../../../db/index.js';
 import { authorizeOnly } from '../../authorization.js';
 import config from '../../../config.js';
+import { LoginInfoSchema } from '../../../types.js';
 import { sendOrganizationAcceptanceEmail, sendOrganizationRejectionEmail } from './emails.js';
 
 const adminRouter = Router();
 
 adminRouter.post('/login', async (req, res) => {
-  const body = zod.object({
-    email: zod.email(),
-    password: zod.string(),
-  }).parse(req.body);
+  const body = LoginInfoSchema.parse(req.body);
 
   const account = await database
     .selectFrom('admin_account')
@@ -32,11 +30,14 @@ adminRouter.post('/login', async (req, res) => {
     res.status(403);
     throw new Error('Invalid login');
   }
-
-  const token = jwt.sign({
+  const token = await new jose.SignJWT({
     id: account.id,
     role: 'admin',
-  }, config.JWT_SECRET);
+  })
+    .setIssuedAt()
+    .setProtectedHeader({ alg: 'HS256' })
+    .setExpirationTime('7d')
+    .sign(new TextEncoder().encode(config.JWT_SECRET));
 
   // @ts-expect-error: Do not return the password
   delete account.password;

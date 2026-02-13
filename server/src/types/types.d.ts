@@ -1,9 +1,7 @@
-import { JwtPayload } from 'jsonwebtoken';
+import { JWTPayload } from 'jose';
+import { UserJWT } from '../types.js';
 
-interface UserJWT extends JwtPayload {
-  id: number;
-  role: 'admin' | 'organization' | 'volunteer';
-}
+type UserJWTPayload = JWTPayload & UserJWT;
 
 declare global {
   namespace Express {

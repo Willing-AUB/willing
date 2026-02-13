@@ -1,43 +1,66 @@
 import { Router } from 'express';
-import zod from 'zod';
 import database from '../../db/index.js';
 import { sendAdminOrganizationRequestEmail } from './admin/emails.js';
+import { newOrganizationRequestSchema } from '../../db/tables.js';
 
 const orgRouter = Router();
 
-const orgRequestSchema = zod.object({
-  name: zod.string().min(1),
-  email: zod.email(),
-  phone_number: zod.string().optional().default(''),
-  url: zod.string().optional().default(''),
-  location_name: zod.string().min(1),
-  latitude: zod.number().optional(),
-  longitude: zod.number().optional(),
-});
-
 orgRouter.post('/request', async (req, res) => {
-  const body = orgRequestSchema.parse(req.body);
+  const body = newOrganizationRequestSchema.parse(req.body);
+
+  const email = body.email.toLowerCase().trim();
+
+  // check email in existing account
+  const checkAccountRequest = await database
+    .selectFrom('organization_account')
+    .select('id')
+    .where('email', '=', email)
+    .executeTakeFirst();
+
+  if (checkAccountRequest) {
+    return res.status(400).json({
+      success: false,
+      message: 'An organization with this email account already exists',
+    });
+  }
+
+  // check email in pending requests
+  const checkPendingRequest = await database
+    .selectFrom('organization_request')
+    .select('id')
+    .where('email', '=', email)
+    .executeTakeFirst();
+
+  if (checkPendingRequest) {
+    return res.status(400).json({
+      success: false,
+      message: 'A request with this email is already pending',
+    });
+  }
 
   const organization = await database
     .insertInto('organization_request')
     .values({
       name: body.name,
-      email: body.email,
+      email: email,
       phone_number: body.phone_number,
       url: body.url,
       location_name: body.location_name,
 
       // FORCE 0,0 for now
-      latitude: '0',
-      longitude: '0',
+      latitude: 0,
+      longitude: 0,
     })
     .returningAll().executeTakeFirst();
 
-  if (!organization)
+  if (!organization) {
     throw new Error('Failed to create organization request');
-
-  else {
-    sendAdminOrganizationRequestEmail(organization);
+  } else {
+    try {
+      sendAdminOrganizationRequestEmail(organization);
+    } catch (error) {
+      console.error('Failed to send organization request email to admin', error);
+    }
     res.status(201).json({ success: true });
   }
 });

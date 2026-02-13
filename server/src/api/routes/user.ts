@@ -1,17 +1,15 @@
 import { Router } from 'express';
 import database from '../../db/index.js';
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import * as jose from 'jose';
 import zod from 'zod';
 import config from '../../config.js';
+import { LoginInfoSchema } from '../../types.js';
 
 const userRouter = Router();
 
 userRouter.post('/login', async (req, res) => {
-  const body = zod.object({
-    email: zod.email(),
-    password: zod.string(),
-  }).parse(req.body);
+  const body = LoginInfoSchema.parse(req.body);
 
   let organizationAccount;
   let volunteerAccount;
@@ -48,10 +46,13 @@ userRouter.post('/login', async (req, res) => {
     throw new Error('Invalid login');
   }
 
-  const token = jwt.sign({
+  const token = await new jose.SignJWT({
     id: (organizationAccount || volunteerAccount)?.id,
     role: organizationAccount ? 'organization' : 'volunteer',
-  }, config.JWT_SECRET);
+  }).setIssuedAt()
+    .setProtectedHeader({ alg: 'HS256' })
+    .setExpirationTime('7d')
+    .sign(new TextEncoder().encode(config.JWT_SECRET));
 
   res.json({
     token,

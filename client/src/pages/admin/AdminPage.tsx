@@ -1,6 +1,8 @@
 import { Outlet, useLocation, useNavigate } from 'react-router';
 import { useCallback, useContext, useEffect } from 'react';
+import * as jose from 'jose';
 import AdminContext, { AdminProvider } from './AdminContext';
+import type { UserJWT } from '../../../../server/src/types';
 
 function AdminPageInner() {
   const navigate = useNavigate();
@@ -13,14 +15,19 @@ function AdminPageInner() {
     if (!jwt) {
       navigate('/admin/login');
     } else {
-      refreshAdmin();
+      const { role } = jose.decodeJwt<UserJWT>(jwt);
+      if (role === 'admin') {
+        refreshAdmin();
+      } else {
+        navigate('/' + role);
+      }
     }
-  }, [location.pathname, navigate, refreshAdmin]);
+  }, []);
 
   const handleLogout = useCallback(() => {
     (document.activeElement as HTMLElement)?.blur();
     logout();
-    navigate('/admin/login');
+    navigate('/');
   }, [logout, navigate]);
 
   return (

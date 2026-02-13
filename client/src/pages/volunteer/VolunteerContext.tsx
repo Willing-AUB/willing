@@ -1,9 +1,9 @@
 import { createContext, useState, useCallback, useEffect, type ReactNode } from 'react';
-import type { VolunteerAccount } from '../../../../server/src/db/types';
+import type { VolunteerAccountWithoutPassword } from '../../../../server/src/db/tables';
 import requestServer from '../../requestServer';
 
 type VolunteerContextType = {
-  volunteer?: VolunteerAccount;
+  volunteer?: VolunteerAccountWithoutPassword;
   refreshVolunteer: () => void;
   logout: () => void;
 };
@@ -15,7 +15,7 @@ const VolunteerContext = createContext<VolunteerContextType>({
 });
 
 export const VolunteerProvider = ({ children }: { children: ReactNode }) => {
-  const [volunteer, setVolunteer] = useState<VolunteerAccount | undefined>(undefined);
+  const [volunteer, setVolunteer] = useState<VolunteerAccountWithoutPassword | undefined>(undefined);
 
   const refreshVolunteer = useCallback(() => {
     const jwt = localStorage.getItem('jwt');
@@ -24,7 +24,7 @@ export const VolunteerProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    requestServer<{ volunteer: VolunteerAccount }>('/volunteer/me', {}, true)
+    requestServer<{ volunteer: VolunteerAccountWithoutPassword }>('/volunteer/me', {}, true)
       .then(response => setVolunteer(response.volunteer))
       .catch(() => setVolunteer(undefined));
   }, []);
