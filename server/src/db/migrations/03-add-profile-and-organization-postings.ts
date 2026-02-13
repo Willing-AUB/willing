@@ -28,7 +28,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('volunteer_id', 'integer', col => col.notNull().references('volunteer_account.id').onDelete('cascade'))
     .addColumn('name', 'text', col => col.notNull())
     .execute();
-  db.schema.alterTable('volunteer_account')
+  await db.schema.alterTable('volunteer_account')
     .addColumn('description', 'text')
     .execute();
 }
@@ -37,5 +37,5 @@ export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable('volunteer_skill').execute();
   await db.schema.dropTable('posting_skill').execute();
   await db.schema.dropTable('organization_posting').execute();
-  db.schema.alterTable('volunteer_account').dropColumn('description').execute();
+  await db.schema.alterTable('volunteer_account').dropColumn('description').execute();
 }
