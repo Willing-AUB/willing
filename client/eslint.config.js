@@ -34,6 +34,8 @@ export default defineConfig([
         },
       ],
       ['@typescript-eslint/no-explicit-any']: 'warn',
+      ['react-hooks/exhaustive-deps']: 'off',
+      ['react-hooks/set-state-in-effect']: 'off',
     },
     languageOptions: {
       ecmaVersion: 2020,

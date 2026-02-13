@@ -1,9 +1,9 @@
 import { createContext, useState, useCallback, useEffect, type ReactNode } from 'react';
-import type { AdminAccount } from '../../../../server/src/db/types';
+import type { AdminAccountWithoutPassword } from '../../../../server/src/db/types';
 import requestServer from '../../requestServer';
 
 type AdminContextType = {
-  admin?: AdminAccount;
+  admin?: AdminAccountWithoutPassword;
   refreshAdmin: () => void;
   logout: () => void;
 };
@@ -15,7 +15,7 @@ const AdminContext = createContext<AdminContextType>({
 });
 
 export const AdminProvider = ({ children }: { children: ReactNode }) => {
-  const [admin, setAdmin] = useState<AdminAccount | undefined>(undefined);
+  const [admin, setAdmin] = useState<AdminAccountWithoutPassword | undefined>(undefined);
 
   const refreshAdmin = useCallback(() => {
     const jwt = localStorage.getItem('jwt');
@@ -24,7 +24,7 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    requestServer<{ admin: AdminAccount }>('/admin/me', {}, true)
+    requestServer<{ admin: AdminAccountWithoutPassword }>('/admin/me', {}, true)
       .then(response => setAdmin(response.admin))
       .catch(() => setAdmin(undefined));
   }, []);

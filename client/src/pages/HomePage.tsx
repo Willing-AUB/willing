@@ -1,6 +1,20 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import * as jose from 'jose';
+import type { Role, UserJWT } from '../../../server/src/types';
 
 function HomePage() {
+  const [role, setRole] = useState<Role>();
+
+  useEffect(() => {
+    const jwt = localStorage.getItem('jwt');
+    if (!jwt) return;
+
+    const { role: jwtRole } = jose.decodeJwt<UserJWT>(jwt);
+
+    setRole(jwtRole);
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col bg-base-100">
       <div className="navbar bg-base-100 shadow-md">
@@ -11,7 +25,11 @@ function HomePage() {
           </a>
         </div>
         <div className="flex-none">
-          <Link to="/login" className="btn btn-ghost">Login</Link>
+          {
+            !role
+              ? <Link to="/login" className="btn btn-ghost">Login</Link>
+              : <Link to={'/' + role}className="btn btn-ghost">Dashboard</Link>
+          }
         </div>
       </div>
 

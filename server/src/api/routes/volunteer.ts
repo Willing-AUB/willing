@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import database from '../../db/index.js';
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import * as jose from 'jose';
 import { z } from 'zod';
 import config from '../../config.js';
 import { authorizeOnly } from '../authorization.js';
@@ -59,10 +59,11 @@ volunteerRouter.post('/create', async (req, res) => {
     throw new Error('Failed to create volunteer');
   }
 
-  const token = jwt.sign(
-    { id: newVolunteer.id, role: 'volunteer' },
-    config.JWT_SECRET,
-  );
+  const token = new jose.SignJWT({ id: newVolunteer.id, role: 'volunteer' })
+    .setIssuedAt()
+    .setProtectedHeader({ alg: 'HS256' })
+    .setExpirationTime('7d')
+    .sign(new TextEncoder().encode(config.JWT_SECRET));
 
   // @ts-expect-error: do not return the password
   delete newVolunteer.password;
