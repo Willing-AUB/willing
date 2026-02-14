@@ -1,6 +1,7 @@
 import cors from 'cors';
 import express, { type ErrorRequestHandler } from 'express';
 import morgan from 'morgan';
+import { setUserJWT } from './api/authorization.js';
 import { ZodError } from 'zod';
 
 import api from './api/index.js';
@@ -16,6 +17,7 @@ app.use(cors({
   credentials: true,
 }));
 
+app.use(setUserJWT);
 app.use(api);
 
 // Not found handler
