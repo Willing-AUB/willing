@@ -13,6 +13,7 @@ export interface Database {
   organization_posting: OrganizationPostingTable;
   posting_skill: PostingSkillTable;
   volunteer_skill: VolunteerSkillTable;
+  posting_location_name: PostingLocationNameTable;
 }
 
 export const volunteerAccountSchema = zod.object({
@@ -172,3 +173,13 @@ export const VolunteerSkillSchema = zod.object({
 export type VolunteerSkill = zod.infer<typeof VolunteerSkillSchema>;
 
 export type VolunteerSkillTable = WithGeneratedID<VolunteerSkill>;
+
+export type PostingLocationNameTable = {
+  id: number;
+  name: string;
+};
+
+export const PostingLocationNameSchema = zod.object({
+  id: zod.number(),
+  name: zod.string().min(1, 'Location name is required'),
+});
