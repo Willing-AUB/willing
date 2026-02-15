@@ -145,6 +145,7 @@ export const organizationPostingSchema = zod.object({
   end_timestamp: zod.preprocess(val => val ? new Date(val as string) : undefined, zod.date({ message: 'End time must be a valid date' })).optional(),
   minimum_age: zod.number().optional(),
   is_open: zod.boolean().default(true),
+  location_name: zod.string().min(2, 'Location must be longer than 2 characters'),
 });
 
 export type OrganizationPosting = zod.infer<typeof organizationPostingSchema>;
