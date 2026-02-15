@@ -3,7 +3,6 @@ import express, { type ErrorRequestHandler } from 'express';
 import morgan from 'morgan';
 import { ZodError } from 'zod';
 
-import { setUserJWT } from './api/authorization.js';
 import api from './api/index.js';
 import config from './config.js';
 
