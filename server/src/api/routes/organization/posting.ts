@@ -5,7 +5,7 @@ import { newOrganizationPostingSchema, type NewOrganizationPosting } from '../..
 
 const postingRouter = Router();
 
-postingRouter.post('/posting', async (req, res) => {
+postingRouter.post('/', async (req, res) => {
   const body: NewOrganizationPosting = newOrganizationPostingSchema.parse(req.body);
   const orgId = req.userJWT!.id;
 
@@ -47,7 +47,7 @@ postingRouter.post('/posting', async (req, res) => {
   res.json({ success: true, posting: posting });
 });
 
-postingRouter.get('/posting', async (req, res) => {
+postingRouter.get('/', async (req, res) => {
   const orgId = req.userJWT!.id;
 
   const posting = await database
@@ -58,19 +58,6 @@ postingRouter.get('/posting', async (req, res) => {
     .execute();
 
   res.json({ posting });
-});
-
-postingRouter.get('/me', async (req, res) => {
-  const organization = await database
-    .selectFrom('organization_account')
-    .selectAll()
-    .where('id', '=', req.userJWT!.id)
-    .executeTakeFirstOrThrow();
-
-  // @ts-expect-error: do not return the password
-  delete organization.password;
-
-  res.json({ organization });
 });
 
 export default postingRouter;

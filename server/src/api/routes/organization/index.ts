@@ -1,8 +1,10 @@
 import { Router } from 'express';
 
+import postingRouter from './posting.js';
 import database from '../../../db/index.js';
 import { newOrganizationRequestSchema } from '../../../db/tables.js';
 import { sendAdminOrganizationRequestEmail } from '../../../SMTP/emails.js';
+import { authorizeOnly } from '../../authorization.js';
 
 const organizationRouter = Router();
 
@@ -57,5 +59,23 @@ organizationRouter.post('/request', async (req, res) => {
     res.json({});
   }
 });
+
+// Protected organization routes
+organizationRouter.use(authorizeOnly('organization'));
+
+organizationRouter.get('/me', async (req, res) => {
+  const organization = await database
+    .selectFrom('organization_account')
+    .selectAll()
+    .where('id', '=', req.userJWT!.id)
+    .executeTakeFirstOrThrow();
+
+  // @ts-expect-error: do not return the password
+  delete organization.password;
+
+  res.json({ organization });
+});
+
+organizationRouter.use('/posting', postingRouter);
 
 export default organizationRouter;

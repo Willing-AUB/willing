@@ -1,9 +1,8 @@
 import { Router } from 'express';
 
-import { setUserJWT, authorizeOnly } from './authorization.js';
+import { setUserJWT } from './authorization.js';
 import adminRouter from './routes/admin/index.js';
-import indexRouter from './routes/organization/index.js';
-import postingRouter from './routes/organization/posting.js';
+import organizationRouter from './routes/organization/index.js';
 import userRouter from './routes/user.js';
 import volunteerRouter from './routes/volunteer.js';
 
@@ -14,8 +13,6 @@ api.use('/user', userRouter);
 api.use('/admin', adminRouter);
 api.use('/volunteer', volunteerRouter);
 
-// Organization routes: public routes first, then protected routes
-api.use('/organization', indexRouter);
-api.use('/organization', authorizeOnly('organization'), postingRouter);
+api.use('/organization', organizationRouter);
 
 export default api;
