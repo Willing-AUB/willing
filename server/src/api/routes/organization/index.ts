@@ -11,7 +11,7 @@ const organizationRouter = Router();
 organizationRouter.post('/request', async (req, res) => {
   const body = newOrganizationRequestSchema.parse(req.body);
 
-  const email = body.email.toLowerCase().trim();
+  const email = body.email;
 
   const checkAccountRequest = await database
     .selectFrom('organization_account')
