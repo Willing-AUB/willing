@@ -7,12 +7,7 @@ const postingRouter = Router();
 
 postingRouter.post('/', async (req, res) => {
   const body: NewOrganizationPosting = newOrganizationPostingSchema.parse(req.body);
-  const orgId = req.userJWT?.id;
-
-  if (!orgId) {
-    res.status(401);
-    throw new Error('Unauthorized');
-  }
+  const orgId = req.userJWT!.id;
 
   const result = await database.transaction().execute(async (trx) => {
     const newPosting = await trx
@@ -54,12 +49,7 @@ postingRouter.post('/', async (req, res) => {
 });
 
 postingRouter.get('/', async (req, res) => {
-  const orgId = req.userJWT?.id;
-
-  if (!orgId) {
-    res.status(401);
-    throw new Error('Unauthorized');
-  }
+  const orgId = req.userJWT!.id;
 
   const postings = await database
     .selectFrom('organization_posting')
