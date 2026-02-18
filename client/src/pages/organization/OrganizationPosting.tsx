@@ -5,12 +5,12 @@ import { useNavigate } from 'react-router';
 import AuthContext from '../../auth/AuthContext';
 import LocationPicker from '../../components/LocationPicker';
 import requestServer from '../../utils/requestServer';
+import { useOrganization } from '../../utils/useUsers';
 
 import type { OrganizationAccountWithoutPassword } from '../../../../server/src/db/tables';
 
 export default function OrganizationPosting() {
-  const { restrictRoute } = useContext(AuthContext);
-  const account = restrictRoute('organization', '/login') as OrganizationAccountWithoutPassword;
+  const account = useOrganization();
   const navigate = useNavigate();
 
   const [title, setTitle] = useState('');
