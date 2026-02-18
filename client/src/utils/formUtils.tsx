@@ -51,7 +51,7 @@ export function FormField<T extends FieldValues>({
 
   const commonProps = {
     ...register(name, {
-      onChange: () => clearErrors('root' as any),
+      onChange: () => clearErrors('root'),
     }),
     placeholder: placeholder || label,
   };
