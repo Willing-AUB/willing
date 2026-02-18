@@ -1,3 +1,4 @@
+import { Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import requestServer from '../../utils/requestServer';
@@ -31,6 +32,7 @@ function OrganizationHome() {
           className="btn btn-primary mb-6"
           onClick={() => navigate('posting')}
         >
+          <Plus className="w-4 h-4" />
           Create New Posting
         </button>
 
