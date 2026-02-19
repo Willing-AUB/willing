@@ -4,14 +4,16 @@ import { useNavigate } from 'react-router-dom';
 import requestServer from '../../utils/requestServer';
 import useAsync from '../../utils/useAsync';
 
-import type { OrganizationPosting } from '../../../../server/src/db/tables';
+import type { OrganizationPosting, PostingSkill } from '../../../../server/src/db/tables';
+
+type PostingWithSkills = OrganizationPosting & { skills: PostingSkill[] };
 
 function OrganizationHome() {
   const navigate = useNavigate();
 
   const { data: postings, loading, error } = useAsync(
     async () => {
-      const response = await requestServer<{ posting: OrganizationPosting[] }>(
+      const response = await requestServer<{ posting: PostingWithSkills[] }>(
         '/organization/posting',
         { method: 'GET' },
         true,
@@ -88,6 +90,18 @@ function OrganizationHome() {
                         <strong>Minimum Age:</strong>
                         {posting.minimum_age}
                       </p>
+                    )}
+                    {posting.skills && posting.skills.length > 0 && (
+                      <div>
+                        <strong>Skills:</strong>
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          {posting.skills.map(skill => (
+                            <span key={skill.id} className="badge badge-primary badge-sm">
+                              {skill.name}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
