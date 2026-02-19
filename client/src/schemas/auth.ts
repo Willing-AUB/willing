@@ -35,8 +35,29 @@ export const organizationPostingFormSchema = newOrganizationPostingSchema
   .extend({
     latitude: z.number().optional(),
     longitude: z.number().optional(),
-    start_timestamp: z.string().min(1, 'Start time is required'),
-    end_timestamp: z.string().optional(),
+    start_timestamp: z
+      .string()
+      .min(1, 'Start time is required')
+      .refine(
+        (val) => {
+          const yearMatch = val.match(/^(\d+)-/);
+          if (!yearMatch) return true;
+          return yearMatch[1].length <= 4;
+        },
+        { message: 'Year must be 4 digits or less' },
+      ),
+    end_timestamp: z
+      .string()
+      .optional()
+      .refine(
+        (val) => {
+          if (!val) return true;
+          const yearMatch = val.match(/^(\d+)-/);
+          if (!yearMatch) return true;
+          return yearMatch[1].length <= 4;
+        },
+        { message: 'Year must be 4 digits or less' },
+      ),
     max_volunteers: z.string().optional(),
     minimum_age: z.string().optional(),
     is_open: z.boolean(),

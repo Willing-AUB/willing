@@ -58,6 +58,17 @@ export function FormField<T extends FieldValues>({
 
   const statusClass = error ? (type === 'textarea' ? 'textarea-error' : (selectOptions ? 'select-error' : 'input-error')) : '';
   const iconPadding = Icon ? 'pl-10' : '';
+
+  const handleDateTimeInput = (e: React.FormEvent<HTMLInputElement>) => {
+    if (type === 'datetime-local') {
+      const input = e.currentTarget;
+      const yearMatch = input.value.match(/^(\d+)-/);
+      if (yearMatch && yearMatch[1].length > 4) {
+        input.value = input.value.slice(0, 4) + input.value.slice(yearMatch[1].length);
+      }
+    }
+  };
+
   return (
     <fieldset className="fieldset w-full">
       <label className="label">
@@ -96,6 +107,7 @@ export function FormField<T extends FieldValues>({
                   <input
                     type={type}
                     className={`input input-bordered w-full focus:input-primary ${iconPadding} ${statusClass}`}
+                    onInput={handleDateTimeInput}
                     {...commonProps}
                   />
                 )
