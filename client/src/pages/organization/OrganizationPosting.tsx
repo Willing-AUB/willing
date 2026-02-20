@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Plus, Send, X, MapPin, Edit3, Users, ShieldCheck } from 'lucide-react';
+import { Plus, Send, X, MapPin, Edit3, Users, ShieldCheck, Info, LockOpen, Lock } from 'lucide-react';
 import React, { useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router';
@@ -10,6 +10,8 @@ import { organizationPostingFormSchema, type OrganizationPostingFormData } from 
 import { executeAndShowError, FormField, FormRootError } from '../../utils/formUtils';
 import requestServer from '../../utils/requestServer';
 import { useOrganization } from '../../utils/useUsers';
+
+const SKILL_COLORS = ['badge-primary', 'badge-secondary', 'badge-accent', 'badge-info'];
 
 export default function OrganizationPosting() {
   const account = useOrganization();
@@ -80,15 +82,26 @@ export default function OrganizationPosting() {
         <h2 className="text-3xl font-extrabold tracking-tight mb-6">Create Posting</h2>
 
         <div className="card bg-base-100 w-full shadow-2xl">
-          <form className="card-body space-y-4" onSubmit={submit}>
-            <FormField
-              form={form}
-              label="Title"
-              name="title"
-              type="text"
-              placeholder="Enter posting title"
-              Icon={Edit3}
-            />
+          <form className="card-body space-y-6" onSubmit={submit}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                form={form}
+                label="Title"
+                name="title"
+                type="text"
+                placeholder="Enter posting title"
+                Icon={Edit3}
+              />
+
+              <FormField
+                form={form}
+                label="Location Name"
+                name="location_name"
+                type="text"
+                placeholder="e.g. Downtown Community Center"
+                Icon={MapPin}
+              />
+            </div>
 
             <FormField
               form={form}
@@ -98,111 +111,149 @@ export default function OrganizationPosting() {
               placeholder="Describe the opportunity"
             />
 
-            <FormField
-              form={form}
-              label="Location Name"
-              name="location_name"
-              type="text"
-              placeholder="e.g. Downtown Community Center"
-              Icon={MapPin}
-            />
-
-            <div>
+            <div className="space-y-4">
               <label className="label">
                 <span className="label-text font-medium">Pin Location on Map</span>
               </label>
-              <LocationPicker position={position} setPosition={setPosition} />
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                form={form}
-                label="Max Volunteers"
-                name="max_volunteers"
-                type="number"
-                placeholder="Optional"
-                Icon={Users}
-              />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <FormField
+                      form={form}
+                      label="Max Volunteers"
+                      name="max_volunteers"
+                      type="number"
+                      placeholder="Optional"
+                      Icon={Users}
+                    />
 
-              <FormField
-                form={form}
-                label="Minimum Age"
-                name="minimum_age"
-                type="number"
-                placeholder="Optional"
-                Icon={ShieldCheck}
-              />
-            </div>
+                    <FormField
+                      form={form}
+                      label="Min Age"
+                      name="minimum_age"
+                      type="number"
+                      placeholder="Optional"
+                      Icon={ShieldCheck}
+                    />
+                  </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                form={form}
-                label="Start Time"
-                name="start_timestamp"
-                type="datetime-local"
-              />
+                  <div className="grid grid-cols-2 gap-3">
+                    <FormField
+                      form={form}
+                      label="Start Date"
+                      name="start_timestamp"
+                      type="datetime-local"
+                    />
 
-              <FormField
-                form={form}
-                label="End Time"
-                name="end_timestamp"
-                type="datetime-local"
-              />
-            </div>
+                    <FormField
+                      form={form}
+                      label="End Date"
+                      name="end_timestamp"
+                      type="datetime-local"
+                    />
+                  </div>
 
-            <div>
-              <label className="label">
-                <span className="label-text font-medium">Skills (optional)</span>
-              </label>
-              <div className="flex gap-2">
-                <input
-                  className="input input-bordered flex-1"
-                  placeholder="e.g. First Aid"
-                  value={skillInput}
-                  onChange={e => setSkillInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      addSkill();
-                    }
-                  }}
-                />
-                <button type="button" className="btn btn-outline self-center" onClick={addSkill}>
-                  <Plus size={16} />
-                  {' '}
-                  Add
-                </button>
-              </div>
-              {skills.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {skills.map(skill => (
-                    <span key={skill} className="badge badge-primary gap-1">
-                      {skill}
-                      <button type="button" onClick={() => removeSkill(skill)} className="cursor-pointer">
-                        <X size={12} />
+                  <div>
+                    <label className="label">
+                      <span className="label-text font-medium">Skills (optional)</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        className="input input-bordered input-sm w-full pr-10"
+                        placeholder="e.g. First Aid"
+                        value={skillInput}
+                        onChange={e => setSkillInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            addSkill();
+                          }
+                        }}
+                      />
+                      <button type="button" className="absolute right-2 top-1/2 transform -translate-y-1/2 text-base-content hover:text-primary transition-colors" onClick={addSkill}>
+                        <Plus size={18} />
                       </button>
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
+                    </div>
+                    {skills.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        {skills.map((skill, index) => (
+                          <span key={skill} className={`badge gap-1 text-white font-medium ${SKILL_COLORS[index % SKILL_COLORS.length]}`}>
+                            {skill}
+                            <button type="button" onClick={() => removeSkill(skill)} className="cursor-pointer hover:opacity-70">
+                              <X size={12} />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
 
-            <div className="form-control">
-              <label className="label cursor-pointer justify-start gap-3">
-                <input
-                  type="checkbox"
-                  className="checkbox checkbox-primary"
-                  {...form.register('is_open')}
-                />
-                <span>Open for volunteers</span>
-              </label>
+                  <div>
+                    <label className="label mb-2">
+                      <span className="label-text font-medium">Posting Type</span>
+                    </label>
+
+                    <div className="flex gap-2 mb-2">
+                      <button
+                        type="button"
+                        onClick={() => form.setValue('is_open', true)}
+                        className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${
+                          form.watch('is_open')
+                            ? 'bg-primary text-white shadow-lg'
+                            : 'bg-base-300 text-base-content hover:bg-base-200'
+                        }`}
+                      >
+                        <LockOpen size={16} />
+                        Open Posting
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => form.setValue('is_open', false)}
+                        className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${
+                          !form.watch('is_open')
+                            ? 'bg-secondary text-white shadow-lg'
+                            : 'bg-base-300 text-base-content hover:bg-base-200'
+                        }`}
+                      >
+                        <Lock size={16} />
+                        Review-Based Posting
+                      </button>
+                    </div>
+
+                    <div className="bg-base-200 rounded-lg p-2 flex gap-2">
+                      <Info size={16} className="text-info flex-shrink-0 mt-0.5" />
+                      <div className="text-xs">
+                        {form.watch('is_open')
+                          ? (
+                              <p>
+                                <strong>Open: </strong>
+                                Volunteers are accepted automatically.
+                              </p>
+                            )
+                          : (
+                              <p>
+                                <strong>Review: </strong>
+                                Volunteers must be approved by the organization.
+                              </p>
+                            )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="lg:col-span-1">
+                  <LocationPicker position={position} setPosition={setPosition} />
+                </div>
+              </div>
             </div>
 
             <FormRootError form={form} />
 
             <button
               type="submit"
-              className="btn btn-primary flex items-center gap-2 mt-4"
+              className="btn btn-primary flex items-center gap-2 mt-6"
               disabled={form.formState.isSubmitting}
             >
               {form.formState.isSubmitting
