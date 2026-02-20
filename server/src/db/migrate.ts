@@ -53,6 +53,7 @@ export async function migrateToLatest() {
   });
 
   if (error) {
-    throw new Error(`Migration failed: ${error}`);
+    console.error('Migration error details:', error);
+    throw new Error(`Migration failed: ${String(error)}`);
   }
 }

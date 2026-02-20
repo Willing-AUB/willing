@@ -12,6 +12,7 @@ import HomePage from './pages/HomePage';
 import NotFoundPage from './pages/NotFoundPage';
 import OrganizationHome from './pages/organization/OrganizationHome';
 import OrganizationPage from './pages/organization/OrganizationPage';
+import OrganizationPosting from './pages/organization/OrganizationPosting';
 import OrganizationRequest from './pages/organization/OrganizationRequest';
 import OrganizationSettings from './pages/organization/VolunteerSettings';
 import UserLoginPage from './pages/UserLoginPage';
@@ -70,6 +71,14 @@ createRoot(document.getElementById('root')!).render(
               element={(
                 <OrganizationOnly>
                   <OrganizationHome />
+                </OrganizationOnly>
+              )}
+            />
+            <Route
+              path="posting"
+              element={(
+                <OrganizationOnly>
+                  <OrganizationPosting />
                 </OrganizationOnly>
               )}
             />
