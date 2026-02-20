@@ -7,13 +7,13 @@ import volunteerPostingRouter from './posting.js';
 import resetPassword from '../../../auth/resetPassword.js';
 import config from '../../../config.js';
 import database from '../../../db/index.js';
-import { type VolunteerAccount, newVolunteerAccountSchema, volunteerAccountSchema } from '../../../db/tables.js';
+import { type VolunteerAccountWithoutPassword, newVolunteerAccountSchema, volunteerAccountSchema } from '../../../db/tables.js';
 import { authorizeOnly } from '../../authorization.js';
 
 const volunteerRouter = Router();
 
 type VolunteerProfileResponse = {
-  volunteer: Pick<VolunteerAccount, 'id' | 'first_name' | 'last_name' | 'email' | 'date_of_birth' | 'gender' | 'description' | 'privacy'>;
+  volunteer: VolunteerAccountWithoutPassword;
   skills: string[];
 };
 
@@ -149,7 +149,7 @@ volunteerRouter.put('/profile', async (req, res) => {
   }
 
   await database.transaction().execute(async (trx) => {
-    const volunteerUpdate: Partial<Pick<VolunteerAccount, 'first_name' | 'last_name' | 'email' | 'date_of_birth' | 'gender' | 'description' | 'privacy'>> = {};
+    const volunteerUpdate: Partial<Omit<VolunteerAccountWithoutPassword, 'id'>> = {};
 
     if (body.first_name !== undefined) volunteerUpdate.first_name = body.first_name;
     if (body.last_name !== undefined) volunteerUpdate.last_name = body.last_name;

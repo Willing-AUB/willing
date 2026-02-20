@@ -53,7 +53,7 @@ export const newVolunteerAccountSchema = volunteerAccountSchema.omit({ id: true 
 export type NewVolunteerAccount = zod.infer<typeof newVolunteerAccountSchema>;
 
 export const volunteerAccountWithoutPasswordSchema = volunteerAccountSchema.omit({ password: true });
-export type VolunteerAccountWithoutPassword = zod.infer<typeof newVolunteerAccountSchema>;
+export type VolunteerAccountWithoutPassword = zod.infer<typeof volunteerAccountWithoutPasswordSchema>;
 
 // organization_request
 
