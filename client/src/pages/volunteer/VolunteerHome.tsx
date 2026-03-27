@@ -298,7 +298,7 @@ function VolunteerHome() {
                   subtitle="Recommended for you."
                   hasItems={!forYouSectionLoading && forYouPostings.length > 0}
                   action={(
-                    <Link to="/volunteer/search" className="btn btn-sm btn-primary">
+                    <Link to="/volunteer/for-you" className="btn btn-sm btn-primary">
                       View All
                     </Link>
                   )}
@@ -329,7 +329,7 @@ function VolunteerHome() {
                   subtitle="Recommended for you."
                   hasItems={!forYouSectionLoading && forYouPostings.length > 0}
                   action={(
-                    <Link to="/volunteer/search" className="btn btn-sm btn-primary">
+                    <Link to="/volunteer/for-you" className="btn btn-sm btn-primary">
                       View All
                     </Link>
                   )}

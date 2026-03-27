@@ -58,6 +58,7 @@ volunteerPostingRouter.get('/', async (req, res: Response<VolunteerPostingSearch
   const { location_name, skill } = req.query;
   const dateTimeFilters = parsePostingDateTimeFilters(req.query);
   const hideFull = parseOptionalBooleanQueryParam(req.query.hide_full) ?? false;
+  const includeApplied = parseOptionalBooleanQueryParam(req.query.include_applied) ?? false;
   const crisisIdFilter = parseOptionalNumberQueryParam(req.query.crisis_id);
   const { search, sortBy, sortDir } = parseListQuery(req.query, {
     allowedSortBy: ['recommended', 'start_date', 'created_at'],
@@ -90,8 +91,10 @@ volunteerPostingRouter.get('/', async (req, res: Response<VolunteerPostingSearch
       'organization_posting.crisis_id',
     )
     .select(postingWithContextSelectColumns)
-    .where('organization_posting.is_closed', '=', false)
-    .where(({ not, exists, selectFrom, or }) => not(or([
+    .where('organization_posting.is_closed', '=', false);
+
+  if (!includeApplied) {
+    query = query.where(({ not, exists, selectFrom, or }) => not(or([
       exists(
         selectFrom('enrollment')
           .select('enrollment.id')
@@ -105,6 +108,7 @@ volunteerPostingRouter.get('/', async (req, res: Response<VolunteerPostingSearch
           .where('enrollment_application.volunteer_id', '=', volunteerId),
       ),
     ])));
+  }
 
   if (skillFilter) {
     query = query.where(({ exists, selectFrom }) => exists(

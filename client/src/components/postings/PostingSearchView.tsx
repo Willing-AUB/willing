@@ -129,7 +129,8 @@ function PostingSearchView({
     if (activeFilters.hideFull) query.append('hide_full', 'true');
     if (activeFilters.crisisId !== 'all') query.append('crisis_id', activeFilters.crisisId);
 
-    const url = query.size > 0 ? `${baseUrl}?${query.toString()}` : baseUrl;
+    const separator = baseUrl.includes('?') ? '&' : '?';
+    const url = query.size > 0 ? `${baseUrl}${separator}${query.toString()}` : baseUrl;
 
     setLoading(true);
     setError(null);
