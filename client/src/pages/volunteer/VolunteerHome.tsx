@@ -1,4 +1,4 @@
-﻿import { House } from 'lucide-react';
+import { House } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import Alert from '../../components/Alert';
@@ -235,7 +235,7 @@ function VolunteerHome() {
                     cardItemClassName="shrink-0 snap-start md:w-md w-sm"
                   />
                 </HorizontalScrollSection>
-              ))
+              )
         )}
 
         {crisesError && (
