@@ -1,4 +1,5 @@
 import PostingSearchView from '../../components/postings/PostingSearchView.tsx';
+import PostingViewModeToggle from '../../components/postings/PostingViewModeToggle.tsx';
 import requestServer from '../../utils/requestServer.ts';
 import useAsync from '../../utils/useAsync.ts';
 
@@ -22,6 +23,7 @@ function VolunteerSearch() {
         subtitle="Browse all postings and filter them down by dates, location, or skills."
         icon={undefined}
         showBack={false}
+        actions={<PostingViewModeToggle />}
         fetchUrl="/volunteer/posting?include_applied=true"
         enableCrisisFilter
         crisisOptions={pinnedCrises?.map(crisis => ({

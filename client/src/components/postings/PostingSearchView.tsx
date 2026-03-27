@@ -18,7 +18,7 @@ import useAsync from '../../utils/useAsync';
 import Alert from '../Alert.tsx';
 import PageHeader from '../layout/PageHeader.tsx';
 import Loading from '../Loading.tsx';
-import PostingCard from '../PostingCard.tsx';
+import PostingCollection from './PostingCollection';
 import PostingFiltersCard from './PostingFiltersCard.tsx';
 
 import type { VolunteerPostingSearchResponse, VolunteerEnrollmentsResponse } from '../../../../server/src/api/types.ts';
@@ -57,6 +57,7 @@ type PostingSearchViewProps = {
   fetchUrl?: string;
   enableCrisisFilter?: boolean;
   crisisOptions?: PostingCrisisOption[];
+  actions?: ReactNode;
 };
 
 const toPostingSearchFormValues = (filters: PostingSearchFilters): PostingSearchFormValues => ({
@@ -99,6 +100,7 @@ function PostingSearchView({
   fetchUrl,
   enableCrisisFilter = false,
   crisisOptions = [],
+  actions,
 }: PostingSearchViewProps) {
   const defaultFilters = useMemo<PostingSearchFilters>(() => ({
     search: '',
@@ -161,6 +163,7 @@ function PostingSearchView({
         badge={badge}
         showBack={showBack}
         defaultBackTo={defaultBackTo}
+        actions={actions}
       />
 
       <PostingFiltersCard
@@ -243,22 +246,15 @@ function PostingSearchView({
               <Loading size="lg" />
             </div>
           )
-        : postings.length === 0
-          ? (
-              <Alert>
-                {emptyMessage}
-              </Alert>
-            )
-          : (
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 2xl:grid-cols-3">
-                {postings.map(posting => (
-                  <PostingCard
-                    key={posting.id}
-                    posting={posting}
-                  />
-                ))}
-              </div>
-            )}
+        : (
+            <PostingCollection
+              postings={postings}
+              showCrisis
+              cardsContainerClassName="grid grid-cols-1 gap-6 lg:grid-cols-2 2xl:grid-cols-3"
+              listContainerClassName="space-y-4"
+              emptyState={<Alert>{emptyMessage}</Alert>}
+            />
+          )}
     </div>
   );
 }
