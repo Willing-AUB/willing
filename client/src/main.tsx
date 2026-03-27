@@ -16,6 +16,7 @@ import AdminRequests from './pages/admin/AdminRequests';
 import AdminSettings from './pages/admin/AdminSettings';
 import AdminLogin from './pages/AdminLogin';
 import ForgotPassword from './pages/ForgotPassword';
+import GuidePage from './pages/GuidePage';
 import HomePage from './pages/HomePage';
 import NotFoundPage from './pages/NotFoundPage';
 import OrganizationHome from './pages/organization/OrganizationHome';
@@ -82,6 +83,9 @@ createRoot(document.getElementById('root')!).render(
                 <Route path="search" element={<VolunteerSearch />} />
                 <Route path="settings" element={<VolunteerSettings />} />
               </Route>
+
+              <Route path="organization/:id" element={<OrganizationProfile />} />
+              <Route path="guide" element={<GuidePage />} />
 
               <Route path="/" element={<SharedPage roles={['volunteer', 'organization']} />}>
                 <Route path="posting/:id" element={<Posting />} />
