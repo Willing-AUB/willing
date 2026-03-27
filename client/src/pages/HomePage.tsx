@@ -122,7 +122,7 @@ function HomePage() {
               <div className="px-4 pb-24 pt-14 md:px-6 xl:px-8">
                 <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
                   <div className="max-w-2xl self-start pt-2 text-right lg:justify-self-end">
-                    <h2 className="text-2xl md:text-5xl font-black leading-[1.02] tracking-[-0.04em] text-base-content">
+                    <h2 className="text-3xl md:text-5xl font-black leading-[1.02] tracking-[-0.04em] text-base-content mt-8">
                       Volunteer and make a difference today
                     </h2>
                     <p className="mt-6 ml-auto max-w-xl text-base leading-8 text-base-content/72">
@@ -141,7 +141,7 @@ function HomePage() {
                     )}
                   </div>
 
-                  <div className="card bg-base-100 rounded-[2rem] flex flex-col items-center justify-center min-h-80 p-10 text-center border-2 border-transparent hover:border-primary hover:-translate-y-2 transition-all duration-300 shadow-xl gap-3">
+                  <div className="card bg-base-100 rounded-4xl flex flex-col items-center justify-center min-h-80 p-10 text-center border border-base-300 hover:border-primary hover:-translate-y-2 transition-all duration-300 shadow-xl gap-3">
                     <Users className="text-primary" size={48} />
                     <span className="text-xs font-black uppercase tracking-[0.2em] text-primary">For Individuals</span>
                     <h2 className="text-3xl font-bold">I want to help</h2>
@@ -191,9 +191,22 @@ function HomePage() {
         </section>
 
         <div className="relative mx-auto flex w-full max-w-7xl flex-col gap-20 px-4 md:px-6 xl:px-8 mt-16">
+
+          {auth.user?.role === 'admin' && (
+            <div className="mx-auto flex max-w-7xl flex-wrap justify-center gap-4">
+              <Link
+                to="/admin"
+                className="btn btn-lg rounded-full px-7 shadow-lg bg-linear-to-r from-secondary to-primary text-white border-0 hover:-translate-y-1 transition-all duration-300"
+              >
+                Go to Admin Dashboard
+                <ArrowRight size={18} />
+              </Link>
+            </div>
+          )}
+
           <div className="bg-base-100 px-4 pt-0 pb-6 md:px-6 xl:px-8">
             <div className="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[0.95fr_1.05fr]">
-              <div className="card bg-base-200 rounded-[2rem] flex flex-col items-center justify-center min-h-80 p-10 text-center border-2 border-transparent hover:border-secondary hover:-translate-y-2 transition-all duration-300 shadow-xl gap-3">
+              <div className="card bg-base-200 rounded-4xl flex flex-col items-center justify-center min-h-80 p-10 text-center border border-base-300 hover:border-secondary hover:-translate-y-2 transition-all duration-300 shadow-xl gap-3">
                 <Building2 className="text-secondary" size={48} />
                 <span className="text-xs font-black uppercase tracking-[0.2em] text-secondary">For Organizations</span>
                 <h2 className="text-3xl font-bold">I want help</h2>
@@ -225,7 +238,7 @@ function HomePage() {
                       )}
               </div>
 
-              <div className="max-w-2xl self-start pt-2 lg:justify-self-end">
+              <div className="max-w-2xl self-start pt-2 lg:justify-self-end mt-8">
                 <h2 className="text-3xl md:text-5xl font-black leading-[0.98] tracking-[-0.04em] text-base-content">
                   Join and find
                   <br />
@@ -247,18 +260,6 @@ function HomePage() {
                 )}
               </div>
             </div>
-
-            {auth.user?.role === 'admin' && (
-              <div className="mx-auto mt-10 flex max-w-7xl flex-wrap justify-center gap-4">
-                <Link
-                  to="/admin"
-                  className="btn btn-lg rounded-full px-7 shadow-lg bg-gradient-to-r from-secondary to-primary text-white"
-                >
-                  Go to Admin Dashboard
-                  <ArrowRight size={18} />
-                </Link>
-              </div>
-            )}
           </div>
 
           <section className="space-y-8">
@@ -319,7 +320,7 @@ function HomePage() {
             </div>
           </section>
 
-          <section className="overflow-hidden py-4">
+          <section className="overflow-hidden py-16">
             {loading
               ? (
                   <div className="flex w-full items-center justify-center py-16">
@@ -349,21 +350,21 @@ function HomePage() {
                   )}
           </section>
         </div>
-        <div className="w-full bg-base-200 mt-10">
+        <div className="w-full bg-base-200">
           <svg viewBox="0 0 1440 120" className="w-full text-base-100" preserveAspectRatio="none" height="120">
             <path d="M0,56L60,64C120,72,240,88,360,90.7C480,93,600,83,720,69.3C840,56,960,40,1080,42.7C1200,45,1320,67,1380,77.3L1440,88L1440,0L1380,0C1320,0,1200,0,1080,0C960,0,840,0,720,0C600,0,480,0,360,0C240,0,120,0,60,0L0,0Z" fill="currentColor" />
           </svg>
 
           <div className="py-20 text-center min-h-96 flex flex-col items-center justify-center">
-            <h2 className="text-4xl font-extrabold tracking-tight text-base-content">NEED MORE INFO?</h2>
-            <p className="mt-4 text-lg text-base-content/80">Check out our guide page for full details</p>
+            <h2 className="text-4xl font-extrabold tracking-tight text-base-content">Want to Learn More?</h2>
+            <p className="mt-4 text-lg text-base-content/80">Check out our guide page for full details!</p>
             <LinkButton
               to="/guide"
               color="primary"
               layout="wide"
               className="mt-8"
             >
-              Here
+              Read Our Guide
             </LinkButton>
           </div>
         </div>
