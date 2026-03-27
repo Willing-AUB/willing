@@ -6,7 +6,6 @@ import {
   Calendar,
   Clock3,
   Edit3,
-  MapPin,
   Mail,
   Mars,
   Venus,
