@@ -91,20 +91,20 @@ function HomePage() {
         <section className="bg-base-200 relative overflow-hidden">
 
           {[
-            { Icon: BriefcaseMedical, top: '74%', left: '33%', size: 42, delay: '0.8s', duration: '7.5s' },
-            { Icon: Users, top: '39%', left: '12%', size: 40, delay: '0s', duration: '6s' },
-            { Icon: Building2, top: '28%', left: '85%', size: 36, delay: '1s', duration: '7s' },
-            { Icon: Heart, top: '65%', left: '6%', size: 44, delay: '0.5s', duration: '5s' },
-            { Icon: ShieldCheck, top: '60%', left: '92%', size: 38, delay: '2s', duration: '8s' },
-            { Icon: Award, top: '85%', left: '18%', size: 34, delay: '1.5s', duration: '6.5s' },
-            { Icon: HandHeart, top: '88%', left: '50%', size: 42, delay: '0.8s', duration: '7.5s' },
-            { Icon: Handshake, top: '75%', left: '85%', size: 36, delay: '2.5s', duration: '5.5s' },
-            { Icon: Send, top: '10%', left: '2%', size: 32, delay: '1.2s', duration: '9s' },
-          ].map(({ Icon, top, left, size, delay, duration }, i) => (
+            { Icon: BriefcaseMedical, top: '71%', left: '33%', size: 42 },
+            { Icon: Users, top: '39%', left: '12%', size: 40 },
+            { Icon: Building2, top: '28%', left: '85%', size: 36 },
+            { Icon: Heart, top: '65%', left: '6%', size: 44 },
+            { Icon: ShieldCheck, top: '60%', left: '92%', size: 38 },
+            { Icon: Award, top: '80%', left: '18%', size: 34 },
+            { Icon: HandHeart, top: '84%', left: '50%', size: 42 },
+            { Icon: Handshake, top: '75%', left: '85%', size: 36 },
+            { Icon: Send, top: '10%', left: '2%', size: 32 },
+          ].map(({ Icon, top, left, size }, i) => (
             <div
               key={i}
-              className="absolute opacity-25 text-primary animate-bounce pointer-events-none"
-              style={{ top, left, animationDelay: delay, animationDuration: duration }}
+              className="absolute opacity-40 text-primary"
+              style={{ top, left }}
             >
               <Icon size={size} />
             </div>
@@ -118,8 +118,8 @@ function HomePage() {
               </h1>
             </div>
 
-            <div className="relative left-1/2 -mt-20 w-screen -translate-x-1/2 overflow-hidden">
-              <div className="px-4 pb-20 pt-14 md:px-6 xl:px-8">
+            <div className="relative left-1/2 -mt-10 w-screen -translate-x-1/2 overflow-hidden">
+              <div className="px-4 pb-24 pt-14 md:px-6 xl:px-8">
                 <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
                   <div className="max-w-2xl self-start pt-2 text-right lg:justify-self-end">
                     <h2 className="text-2xl md:text-5xl font-black leading-[1.02] tracking-[-0.04em] text-base-content">
@@ -349,7 +349,7 @@ function HomePage() {
                   )}
           </section>
         </div>
-        <div className="w-full bg-base-200">
+        <div className="w-full bg-base-200 mt-10">
           <svg viewBox="0 0 1440 120" className="w-full text-base-100" preserveAspectRatio="none" height="120">
             <path d="M0,56L60,64C120,72,240,88,360,90.7C480,93,600,83,720,69.3C840,56,960,40,1080,42.7C1200,45,1320,67,1380,77.3L1440,88L1440,0L1380,0C1320,0,1200,0,1080,0C960,0,840,0,720,0C600,0,480,0,360,0C240,0,120,0,60,0L0,0Z" fill="currentColor" />
           </svg>
