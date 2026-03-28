@@ -1,6 +1,5 @@
 import { TextSearch, type LucideIcon } from 'lucide-react';
 import { type ReactNode, useCallback, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 
 import {
   buildSharedPostingQuery,
@@ -19,18 +18,20 @@ import {
   type VolunteerPostingSortOptionValue,
 } from './postingFilterConfig.ts';
 import { FormField } from '../../utils/formUtils.tsx';
-import requestServer, { SERVER_BASE_URL } from '../../utils/requestServer.ts';
+import requestServer from '../../utils/requestServer.ts';
 import useAsync from '../../utils/useAsync';
 import CalendarInfo from '../CalendarInfo.tsx';
-import Card from '../Card.tsx';
 import EmptyState from '../EmptyState.tsx';
+import CrisisCard from './CrisisCard.tsx';
 import PageContainer from '../layout/PageContainer.tsx';
 import PageHeader from '../layout/PageHeader.tsx';
 import Loading from '../Loading.tsx';
+import OrganizationCard from './OrganizationCard.tsx';
 import PostingCollection from './PostingCollection.tsx';
 import PostingFiltersCard from './PostingFiltersCard.tsx';
 
-import type { VolunteerOrganizationSearchResponse, VolunteerPostingSearchResponse, VolunteerEnrollmentsResponse } from '../../../../server/src/api/types.ts';
+import type { VolunteerCrisesResponse, VolunteerOrganizationSearchResponse, VolunteerPostingSearchResponse, VolunteerEnrollmentsResponse } from '../../../../server/src/api/types.ts';
+import type { Crisis } from '../../../../server/src/db/tables/index.ts';
 import type { PostingWithContext } from '../../../../server/src/types.ts';
 
 export type PostingSearchFilters = SharedPostingFilterFields & {
@@ -42,7 +43,8 @@ export type PostingSearchFilters = SharedPostingFilterFields & {
   endTimeTo: string;
   hideFull: boolean;
   crisisId: 'all' | `${number}`;
-  entity: 'postings' | 'organizations';
+  entity: 'postings' | 'organizations' | 'crises';
+  crisisFilter?: 'pinned_only' | 'unpinned_only';
 };
 
 type PostingCrisisOption = {
@@ -50,8 +52,10 @@ type PostingCrisisOption = {
   name: string;
 };
 
+type CrisisPostingSortOptionValue = 'title_asc' | 'title_desc' | 'pinned_only' | 'unpinned_only';
+
 type PostingSearchFormValues = Omit<PostingSearchFilters, 'sortBy' | 'sortDir'> & {
-  sortOption: VolunteerPostingSortOptionValue | OrganizationPostingSortOptionValue;
+  sortOption: VolunteerPostingSortOptionValue | OrganizationPostingSortOptionValue | CrisisPostingSortOptionValue;
   entity: PostingSearchFilters['entity'];
 };
 
@@ -61,6 +65,7 @@ type VolunteerOrganizationSearchResult = {
   description: string | null;
   location_name: string | null;
   logo_path: string | null;
+  posting_count: number;
 };
 
 type PostingSearchViewProps = {
@@ -79,13 +84,22 @@ type PostingSearchViewProps = {
   crisisOptions?: PostingCrisisOption[];
   enableOrganizationSearch?: boolean;
   compact?: boolean;
+  showEntityTabs?: boolean;
 };
 
 const toPostingSearchFormValues = (filters: PostingSearchFilters): PostingSearchFormValues => ({
   search: filters.search,
   sortOption: filters.entity === 'organizations'
     ? toOrganizationPostingSortOptionValue(filters.sortBy as OrganizationPostingSortBy, filters.sortDir)
-    : toVolunteerPostingSortOptionValue(filters.sortBy as VolunteerPostingSortBy, filters.sortDir),
+    : filters.entity === 'crises'
+      ? (filters.crisisFilter === 'pinned_only'
+          ? 'pinned_only'
+          : filters.crisisFilter === 'unpinned_only'
+            ? 'unpinned_only'
+            : filters.sortDir === 'desc'
+              ? 'title_desc'
+              : 'title_asc')
+      : toVolunteerPostingSortOptionValue(filters.sortBy as VolunteerPostingSortBy, filters.sortDir),
   startDateFrom: filters.startDateFrom,
   endDateTo: filters.endDateTo,
   startTimeFrom: filters.startTimeFrom,
@@ -96,17 +110,40 @@ const toPostingSearchFormValues = (filters: PostingSearchFilters): PostingSearch
 });
 
 const fromPostingSearchFormValues = (values: PostingSearchFormValues): PostingSearchFilters => {
-  const selectedSortOption = values.entity === 'organizations'
-    ? resolveOrganizationPostingSortOption(values.sortOption as OrganizationPostingSortOptionValue)
-    : resolveVolunteerPostingSortOption(values.sortOption as VolunteerPostingSortOptionValue);
+  let querySortBy: VolunteerPostingSortBy | OrganizationPostingSortBy = 'title';
+  let querySortDir: PostingSortDir = 'asc';
+  let crisisFilter = undefined as undefined | 'pinned_only' | 'unpinned_only';
 
-  const querySortBy: VolunteerPostingSortBy | OrganizationPostingSortBy = values.entity === 'organizations'
-    ? 'title'
-    : (selectedSortOption.sortBy as VolunteerPostingSortBy);
-
-  const querySortDir: PostingSortDir = values.entity === 'organizations'
-    ? (selectedSortOption.sortDir as PostingSortDir)
-    : selectedSortOption.sortDir;
+  if (values.entity === 'organizations') {
+    const selectedSortOption = resolveOrganizationPostingSortOption(values.sortOption as OrganizationPostingSortOptionValue);
+    querySortBy = 'title';
+    querySortDir = selectedSortOption.sortDir;
+  } else if (values.entity === 'crises') {
+    switch (values.sortOption) {
+      case 'title_desc':
+        querySortBy = 'title';
+        querySortDir = 'desc';
+        break;
+      case 'pinned_only':
+        querySortBy = 'title';
+        querySortDir = 'asc';
+        crisisFilter = 'pinned_only';
+        break;
+      case 'unpinned_only':
+        querySortBy = 'title';
+        querySortDir = 'asc';
+        crisisFilter = 'unpinned_only';
+        break;
+      case 'title_asc':
+      default:
+        querySortBy = 'title';
+        querySortDir = 'asc';
+    }
+  } else {
+    const selectedSortOption = resolveVolunteerPostingSortOption(values.sortOption as VolunteerPostingSortOptionValue);
+    querySortBy = selectedSortOption.sortBy as VolunteerPostingSortBy;
+    querySortDir = selectedSortOption.sortDir;
+  }
 
   return {
     search: values.search,
@@ -119,7 +156,8 @@ const fromPostingSearchFormValues = (values: PostingSearchFormValues): PostingSe
     hideFull: values.hideFull,
     crisisId: values.crisisId,
     entity: values.entity,
-  };
+    crisisFilter,
+  } as PostingSearchFilters;
 };
 
 function PostingSearchView({
@@ -138,6 +176,7 @@ function PostingSearchView({
   crisisOptions = [],
   enableOrganizationSearch = false,
   compact = false,
+  showEntityTabs = true,
 }: PostingSearchViewProps) {
   const defaultFilters = useMemo<PostingSearchFilters>(() => ({
     search: '',
@@ -149,14 +188,24 @@ function PostingSearchView({
     endTimeTo: '',
     hideFull: false,
     crisisId: 'all',
-    entity: enableOrganizationSearch ? 'postings' : 'postings',
+    entity: 'postings',
     ...initialFilters,
-  }), [initialFilters, enableOrganizationSearch]);
-  const defaultFormValues = useMemo(() => toPostingSearchFormValues(defaultFilters), [defaultFilters]);
+  }), [initialFilters]);
+
+  const [activeEntity, setActiveEntity] = useState<PostingSearchFilters['entity']>(defaultFilters.entity);
+
+  const activeFilters = useMemo(() => ({
+    ...defaultFilters,
+    entity: activeEntity,
+    sortBy: activeEntity === 'organizations' ? 'title' : defaultFilters.sortBy,
+    sortDir: activeEntity === 'organizations' ? 'asc' : defaultFilters.sortDir,
+  }), [defaultFilters, activeEntity]);
+
+  const defaultFormValues = useMemo(() => toPostingSearchFormValues(activeFilters), [activeFilters]);
 
   const [postings, setPostings] = useState<PostingWithContext[]>([]);
   const [organizations, setOrganizations] = useState<VolunteerOrganizationSearchResult[]>([]);
-  const [activeEntity, setActiveEntity] = useState<PostingSearchFilters['entity']>(defaultFilters.entity);
+  const [crises, setCrises] = useState<Crisis[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -180,6 +229,7 @@ function PostingSearchView({
     try {
       const shouldFetchPostings = activeFilters.entity === 'postings';
       const shouldFetchOrgs = enableOrganizationSearch && activeFilters.entity === 'organizations';
+      const shouldFetchCrises = activeFilters.entity === 'crises';
 
       const postingPromise = shouldFetchPostings
         ? fetchPostingsRequest(url)
@@ -196,12 +246,39 @@ function PostingSearchView({
             const orgUrl = orgQuery.toString() ? `/volunteer/organizations?${orgQuery.toString()}` : '/volunteer/organizations';
             return requestServer<VolunteerOrganizationSearchResponse>(orgUrl, { includeJwt: true });
           })()
-        : Promise.resolve({ organizations: [] });
+        : Promise.resolve({ organizations: [] } as VolunteerOrganizationSearchResponse);
 
-      const [postingResponse, organizationResponse] = await Promise.all([postingPromise, organizationsPromise]);
+      const crisesPromise = shouldFetchCrises
+        ? (() => {
+            const crisisQuery = new URLSearchParams();
+            if (activeFilters.search) crisisQuery.append('search', activeFilters.search);
+
+            if (activeFilters.crisisFilter === 'pinned_only') {
+              crisisQuery.append('pinned', 'true');
+            } else if (activeFilters.crisisFilter === 'unpinned_only') {
+              crisisQuery.append('pinned', 'false');
+            }
+
+            if (activeFilters.sortBy === 'title' && activeFilters.sortDir === 'desc') {
+              crisisQuery.append('sort_by', 'title_desc');
+            } else if (activeFilters.sortBy === 'title' && activeFilters.sortDir === 'asc') {
+              crisisQuery.append('sort_by', 'title_asc');
+            }
+
+            const crisisUrl = crisisQuery.toString() ? `/volunteer/crises?${crisisQuery.toString()}` : '/volunteer/crises';
+            return requestServer<VolunteerCrisesResponse>(crisisUrl, { includeJwt: true });
+          })()
+        : Promise.resolve({ crises: [] } as VolunteerCrisesResponse);
+
+      const [postingResponse, organizationResponse, crisisResponse] = await Promise.all([
+        postingPromise,
+        organizationsPromise,
+        crisesPromise,
+      ]);
       const postProcessFilteredPostings = filterPostings ? filterPostings(postingResponse.postings) : postingResponse.postings;
       setPostings(postProcessFilteredPostings);
       setOrganizations(organizationResponse.organizations);
+      setCrises(crisisResponse.crises);
     } catch (fetchError) {
       setPostings([]);
       setOrganizations([]);
@@ -213,10 +290,11 @@ function PostingSearchView({
   }, [fetchPostingsRequest, fetchUrl, filterPostings, enableOrganizationSearch]);
 
   const applyFilters = useCallback(async (formValues: PostingSearchFormValues) => {
-    const filters = fromPostingSearchFormValues(formValues);
+    const withEntity = { ...formValues, entity: activeEntity };
+    const filters = fromPostingSearchFormValues(withEntity);
     setActiveEntity(filters.entity);
     await fetchPostings(filters);
-  }, [fetchPostings]);
+  }, [fetchPostings, activeEntity]);
 
   return (
     <PageContainer>
@@ -231,24 +309,66 @@ function PostingSearchView({
       />
 
       <PostingFiltersCard
+        topContent={(
+          showEntityTabs && (
+            <div className="w-full">
+              <div className="join w-full">
+                <button
+                  type="button"
+                  className={`btn btn-sm join-item flex-1 ${activeEntity === 'postings' ? 'btn-primary' : 'btn-outline'}`}
+                  onClick={() => setActiveEntity('postings')}
+                >
+                  Postings
+                </button>
+                {enableOrganizationSearch && (
+                  <button
+                    type="button"
+                    className={`btn btn-sm join-item flex-1 ${activeEntity === 'organizations' ? 'btn-primary' : 'btn-outline'}`}
+                    onClick={() => setActiveEntity('organizations')}
+                  >
+                    Organizations
+                  </button>
+                )}
+                {enableCrisisFilter && (
+                  <button
+                    type="button"
+                    className={`btn btn-sm join-item flex-1 ${activeEntity === 'crises' ? 'btn-primary' : 'btn-outline'}`}
+                    onClick={() => setActiveEntity('crises')}
+                  >
+                    Crises
+                  </button>
+                )}
+              </div>
+            </div>
+          )
+        )}
         defaultValues={defaultFormValues}
         onApply={applyFilters}
         searchFieldName="search"
-        searchPlaceholder="Search title, description, location, organization, or skills"
+        searchPlaceholder={activeEntity === 'organizations'
+          ? 'Search by name, description, or location'
+          : 'Search by title, or description'}
         sortFieldName="sortOption"
-        sortOptions={volunteerPostingSortOptions.map(option => ({
-          label: option.label,
-          value: option.value,
-        }))}
-        organizationSortOptions={organizationPostingSortOptions
-          .filter(option => option.value === 'title_asc' || option.value === 'title_desc')
-          .map(option => ({
-            label: option.label,
-            value: option.value,
-          }))}
-        enableOrganizationSearch={enableOrganizationSearch}
+        sortOptions={activeEntity === 'organizations'
+          ? organizationPostingSortOptions
+              .filter(option => option.value === 'title_asc' || option.value === 'title_desc')
+              .map(option => ({
+                label: option.value === 'title_asc' ? 'Name (A-Z)' : 'Name (Z-A)',
+                value: option.value,
+              }))
+          : activeEntity === 'crises'
+            ? [
+                { label: 'Title (A-Z)', value: 'title_asc' },
+                { label: 'Title (Z-A)', value: 'title_desc' },
+                { label: 'Pinned only', value: 'pinned_only' },
+                { label: 'Unpinned only', value: 'unpinned_only' },
+              ]
+            : volunteerPostingSortOptions.map(option => ({ label: option.label, value: option.value }))}
+        showAdvanced={activeEntity === 'postings'}
         compact={compact}
-        getHasAdvancedFiltersApplied={values => hasSharedAdvancedPostingFilters(values) || values.hideFull || values.crisisId !== 'all'}
+        getHasAdvancedFiltersApplied={values => activeEntity === 'postings'
+          ? (hasSharedAdvancedPostingFilters(values) || values.hideFull || values.crisisId !== 'all')
+          : false}
         renderAdvancedFields={form => (
           <>
             <div className="lg:col-span-2">
@@ -328,80 +448,59 @@ function PostingSearchView({
               <Loading size="lg" />
             </div>
           )
-        : (postings.length === 0 && !organizations.length)
-            ? (
-                <EmptyState
-                  Icon={icon}
-                  title={activeEntity === 'organizations' ? 'No organizations found' : 'No postings found'}
-                  description={activeEntity === 'organizations' ? 'No organizations found yet.' : emptyMessage}
-                />
-              )
-            : (
-                <>
-                  {postings.length > 0 && (
-                    <PostingCollection
-                      postings={postings}
-                      showCrisis
-                      cardsContainerClassName="grid grid-cols-1 gap-6 lg:grid-cols-2 2xl:grid-cols-3"
-                      listContainerClassName="space-y-4"
+        : activeEntity === 'crises'
+          ? (
+              crises.length === 0
+                ? (
+                    <EmptyState
+                      Icon={icon}
+                      title="No crises found"
+                      description="Try a different search term or check again later."
                     />
-                  )}
-
-                  {enableOrganizationSearch && organizations.length > 0 && (
-                    <div className="mt-8">
-                      <h2 className="text-xl font-bold mb-3">Organizations</h2>
-                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        {organizations.map((organization) => {
-                          const logoUrl = organization.logo_path
-                            ? `${SERVER_BASE_URL}/organization/${organization.id}/logo`
-                            : null;
-
-                          return (
-                            <Card key={organization.id}>
-                              <div className="p-4">
-                                <div className="flex items-center gap-3 mb-3">
-                                  <Link to={`/organization/${organization.id}`} className="shrink-0">
-                                    <div className="avatar avatar-placeholder">
-                                      {logoUrl
-                                        ? (
-                                            <div className="w-12 h-12 rounded-full overflow-hidden ring-1 ring-base-300 bg-base-100 flex items-center justify-center">
-                                              <img
-                                                src={logoUrl}
-                                                alt={`${organization.name} logo`}
-                                                className="h-full w-full object-contain"
-                                              />
-                                            </div>
-                                          )
-                                        : (
-                                            <div className="bg-primary text-primary-content w-12 h-12 rounded-full flex items-center justify-center">
-                                              {organization.name.slice(0, 2).toUpperCase()}
-                                            </div>
-                                          )}
-                                    </div>
-                                  </Link>
-                                  <div className="min-w-0">
-                                    <h3 className="text-lg font-semibold truncate">
-                                      <Link to={`/organization/${organization.id}`} className="link link-primary link-hover hover:underline">
-                                        {organization.name}
-                                      </Link>
-                                    </h3>
-                                    <p className="text-sm text-muted truncate">
-                                      {organization.location_name || 'Location not set'}
-                                    </p>
-                                  </div>
-                                </div>
-                                <p className="text-sm text-base-content/70 line-clamp-3">
-                                  {organization.description || 'No description provided.'}
-                                </p>
-                              </div>
-                            </Card>
-                          );
-                        })}
-                      </div>
+                  )
+                : (
+                    <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      {crises.map(crisis => (
+                        <CrisisCard key={crisis.id} crisis={crisis} />
+                      ))}
                     </div>
-                  )}
-                </>
-              )}
+                  )
+            )
+          : (postings.length === 0 && !organizations.length)
+              ? (
+                  <EmptyState
+                    Icon={icon}
+                    title={activeEntity === 'organizations' ? 'No organizations found' : 'No postings found'}
+                    description={activeEntity === 'organizations' ? 'No organizations found yet.' : emptyMessage}
+                  />
+                )
+              : (
+                  <>
+                    {postings.length > 0 && (
+                      <div className="mt-4">
+                        <PostingCollection
+                          postings={postings}
+                          showCrisis
+                          cardsContainerClassName="grid grid-cols-1 gap-6 lg:grid-cols-2 2xl:grid-cols-3"
+                          listContainerClassName="space-y-4"
+                        />
+                      </div>
+                    )}
+
+                    {enableOrganizationSearch && organizations.length > 0 && (
+                      <div className="mt-4">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                          {organizations.map(organization => (
+                            <OrganizationCard
+                              key={organization.id}
+                              organization={organization}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
     </PageContainer>
   );
 }

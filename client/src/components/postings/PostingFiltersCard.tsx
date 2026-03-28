@@ -21,11 +21,12 @@ type PostingFiltersCardProps<T extends FieldValues> = {
   sortFieldName: Path<T>;
   sortOptions: FilterSelectOption[];
   organizationSortOptions?: FilterSelectOption[];
-  enableOrganizationSearch?: boolean;
+  showAdvanced?: boolean;
   compact?: boolean;
   title?: string;
   submitLabel?: string;
   submitIcon?: LucideIcon;
+  topContent?: ReactNode;
 };
 
 function PostingFiltersCard<T extends FieldValues>({
@@ -38,11 +39,12 @@ function PostingFiltersCard<T extends FieldValues>({
   sortFieldName,
   sortOptions,
   organizationSortOptions,
-  enableOrganizationSearch = false,
+  showAdvanced = true,
   compact = false,
   title = 'Filters',
   submitLabel = 'Search',
   submitIcon = Search,
+  topContent,
 }: PostingFiltersCardProps<T>) {
   const form = useForm<T, undefined, T>({
     defaultValues: defaultValues as DefaultValues<T>,
@@ -67,6 +69,7 @@ function PostingFiltersCard<T extends FieldValues>({
   const hasPendingChanges = draftSnapshot !== appliedSnapshot;
   const hasAnyChangesFromDefault = draftSnapshot !== defaultSnapshot || appliedSnapshot !== defaultSnapshot;
   const hasAdvancedFiltersApplied = getHasAdvancedFiltersApplied(draftValues);
+  const showAdvancedFilters = showAdvanced ?? true;
 
   const onApplyRef = useRef(onApply);
   useEffect(() => {
@@ -93,18 +96,24 @@ function PostingFiltersCard<T extends FieldValues>({
   };
 
   const mainGridClass = compact
-    ? 'grid grid-cols-1 gap-3 lg:grid-cols-6 lg:items-end'
-    : 'grid grid-cols-1 gap-4 lg:grid-cols-4 lg:items-end';
+    ? 'grid grid-cols-1 gap-3 lg:grid-cols-8 lg:items-end'
+    : 'grid grid-cols-1 gap-4 lg:grid-cols-8 lg:items-end';
 
-  const searchColSpan = compact ? 'lg:col-span-3' : 'lg:col-span-2';
-  const filterColSpan = compact ? 'lg:col-span-1' : 'lg:col-span-1';
-  const buttonColSpan = compact ? 'lg:col-span-1' : 'lg:col-span-1';
+  const searchColSpan = compact ? 'lg:col-span-4' : 'lg:col-span-4';
+  const filterColSpan = compact ? 'lg:col-span-2' : 'lg:col-span-2';
+  const buttonColSpan = compact ? 'lg:col-span-2' : 'lg:col-span-2';
 
   return (
     <Card>
       <div className="mb-4">
         <h3 className="text-lg font-semibold">{title}</h3>
       </div>
+
+      {topContent && (
+        <div className="mb-4 w-full">
+          {topContent}
+        </div>
+      )}
 
       <form className="space-y-4" onSubmit={applyFilters}>
         <div className={mainGridClass}>
@@ -118,20 +127,6 @@ function PostingFiltersCard<T extends FieldValues>({
             />
           </div>
 
-          {enableOrganizationSearch && (
-            <div className={`mb-0 ${filterColSpan}`}>
-              <FormField
-                form={form}
-                name={'entity' as Path<T>}
-                label="Search for"
-                selectOptions={[
-                  { label: 'Postings', value: 'postings' },
-                  { label: 'Organizations', value: 'organizations' },
-                ]}
-              />
-            </div>
-          )}
-
           <div className={filterColSpan}>
             <FormField
               form={form}
@@ -141,13 +136,14 @@ function PostingFiltersCard<T extends FieldValues>({
             />
           </div>
 
-          <div className={`flex items-end ${buttonColSpan}`}>
+          <div className={`flex self-start pt-[28.5px] ${buttonColSpan}`}>
             <Button
               color="primary"
               type="submit"
               disabled={!hasPendingChanges}
               Icon={submitIcon}
               layout="block"
+              className="h-11 w-full"
             >
               {submitLabel}
             </Button>
@@ -155,14 +151,16 @@ function PostingFiltersCard<T extends FieldValues>({
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <Button
-            type="button"
-            color={hasAdvancedFiltersApplied || showAdvancedSearch ? 'secondary' : 'ghost'}
-            onClick={() => setShowAdvancedSearch(prev => !prev)}
-            Icon={SlidersHorizontal}
-          >
-            Advanced Search
-          </Button>
+          {showAdvancedFilters && (
+            <Button
+              type="button"
+              color={hasAdvancedFiltersApplied || showAdvancedSearch ? 'secondary' : 'ghost'}
+              onClick={() => setShowAdvancedSearch(prev => !prev)}
+              Icon={SlidersHorizontal}
+            >
+              Advanced Search
+            </Button>
+          )}
 
           <Button
             type="button"
@@ -175,7 +173,7 @@ function PostingFiltersCard<T extends FieldValues>({
           </Button>
         </div>
 
-        {showAdvancedSearch && (
+        {showAdvancedFilters && showAdvancedSearch && (
           <div className="rounded-box border border-base-300 bg-base-200/40 p-4">
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               {renderAdvancedFields(form)}

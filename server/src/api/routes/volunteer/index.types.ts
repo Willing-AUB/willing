@@ -18,6 +18,10 @@ export type VolunteerPinnedCrisesResponse = {
   crises: Crisis[];
 };
 
+export type VolunteerCrisesResponse = {
+  crises: Crisis[];
+};
+
 export type VolunteerCrisisResponse = {
   crisis: Crisis;
 };
@@ -41,6 +45,7 @@ export type VolunteerOrganizationSearchResult = {
   description: string | null;
   location_name: string | null;
   logo_path: string | null;
+  posting_count: number;
 };
 
 export type VolunteerOrganizationSearchResponse = {

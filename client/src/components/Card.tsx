@@ -24,6 +24,7 @@ interface CardProps {
   right?: ReactNode;
   link?: string;
   padding?: boolean;
+  className?: string;
 }
 
 function Card({
@@ -37,10 +38,11 @@ function Card({
   right,
   link,
   padding = true,
+  className = '',
 }: CardProps) {
   return (
 
-    <div className="card bg-base-100 shadow-md border border-base-300">
+    <div className={`card bg-base-100 shadow-md border border-base-300 ${className}`.trim()}>
       <div className={`card-body ${padding ? '' : 'p-0'}`}>
         {title && (
           link
