@@ -197,8 +197,8 @@ function PostingSearchView({
   const activeFilters = useMemo(() => ({
     ...defaultFilters,
     entity: activeEntity,
-    sortBy: activeEntity === 'organizations' ? 'title' : defaultFilters.sortBy,
-    sortDir: activeEntity === 'organizations' ? 'asc' : defaultFilters.sortDir,
+    sortBy: activeEntity === 'organizations' || activeEntity === 'crises' ? 'title' : defaultFilters.sortBy,
+    sortDir: activeEntity === 'organizations' || activeEntity === 'crises' ? 'asc' : defaultFilters.sortDir,
   }), [defaultFilters, activeEntity]);
 
   const defaultFormValues = useMemo(() => toPostingSearchFormValues(activeFilters), [activeFilters]);
