@@ -308,40 +308,38 @@ function PostingSearchView({
         defaultBackTo={defaultBackTo}
       />
 
+      {showEntityTabs && (
+        <div className="mb-4 w-full">
+          <div className="join w-full">
+            <button
+              type="button"
+              className={`btn join-item flex-1 ${activeEntity === 'postings' ? 'btn-primary' : 'btn-outline'}`}
+              onClick={() => setActiveEntity('postings')}
+            >
+              Postings
+            </button>
+            {enableOrganizationSearch && (
+              <button
+                type="button"
+                className={`btn join-item flex-1 ${activeEntity === 'organizations' ? 'btn-primary' : 'btn-outline'}`}
+                onClick={() => setActiveEntity('organizations')}
+              >
+                Organizations
+              </button>
+            )}
+            {enableCrisisFilter && (
+              <button
+                type="button"
+                className={`btn join-item flex-1 ${activeEntity === 'crises' ? 'btn-primary' : 'btn-outline'}`}
+                onClick={() => setActiveEntity('crises')}
+              >
+                Crises
+              </button>
+            )}
+          </div>
+        </div>
+      )}
       <PostingFiltersCard
-        topContent={(
-          showEntityTabs && (
-            <div className="w-full">
-              <div className="join w-full">
-                <button
-                  type="button"
-                  className={`btn btn-sm join-item flex-1 ${activeEntity === 'postings' ? 'btn-primary' : 'btn-outline'}`}
-                  onClick={() => setActiveEntity('postings')}
-                >
-                  Postings
-                </button>
-                {enableOrganizationSearch && (
-                  <button
-                    type="button"
-                    className={`btn btn-sm join-item flex-1 ${activeEntity === 'organizations' ? 'btn-primary' : 'btn-outline'}`}
-                    onClick={() => setActiveEntity('organizations')}
-                  >
-                    Organizations
-                  </button>
-                )}
-                {enableCrisisFilter && (
-                  <button
-                    type="button"
-                    className={`btn btn-sm join-item flex-1 ${activeEntity === 'crises' ? 'btn-primary' : 'btn-outline'}`}
-                    onClick={() => setActiveEntity('crises')}
-                  >
-                    Crises
-                  </button>
-                )}
-              </div>
-            </div>
-          )
-        )}
         defaultValues={defaultFormValues}
         onApply={applyFilters}
         searchFieldName="search"
