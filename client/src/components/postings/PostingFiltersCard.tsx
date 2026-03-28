@@ -20,6 +20,9 @@ type PostingFiltersCardProps<T extends FieldValues> = {
   searchPlaceholder: string;
   sortFieldName: Path<T>;
   sortOptions: FilterSelectOption[];
+  organizationSortOptions?: FilterSelectOption[];
+  enableOrganizationSearch?: boolean;
+  compact?: boolean;
   title?: string;
   submitLabel?: string;
   submitIcon?: LucideIcon;
@@ -34,6 +37,9 @@ function PostingFiltersCard<T extends FieldValues>({
   searchPlaceholder,
   sortFieldName,
   sortOptions,
+  organizationSortOptions,
+  enableOrganizationSearch = false,
+  compact = false,
   title = 'Filters',
   submitLabel = 'Search',
   submitIcon = Search,
@@ -46,6 +52,10 @@ function PostingFiltersCard<T extends FieldValues>({
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
 
   const watchedValues = useWatch({ control: form.control });
+  const entityValue = useWatch({
+    control: form.control,
+    name: 'entity' as Path<T>,
+  }) as unknown as 'postings' | 'organizations' | undefined;
   const draftValues = useMemo(() => ({
     ...defaultValues,
     ...(watchedValues ?? {}),
@@ -82,6 +92,14 @@ function PostingFiltersCard<T extends FieldValues>({
     await onApply(defaultValues);
   };
 
+  const mainGridClass = compact
+    ? 'grid grid-cols-1 gap-3 lg:grid-cols-6 lg:items-end'
+    : 'grid grid-cols-1 gap-4 lg:grid-cols-4 lg:items-end';
+
+  const searchColSpan = compact ? 'lg:col-span-3' : 'lg:col-span-2';
+  const filterColSpan = compact ? 'lg:col-span-1' : 'lg:col-span-1';
+  const buttonColSpan = compact ? 'lg:col-span-1' : 'lg:col-span-1';
+
   return (
     <Card>
       <div className="mb-4">
@@ -89,8 +107,8 @@ function PostingFiltersCard<T extends FieldValues>({
       </div>
 
       <form className="space-y-4" onSubmit={applyFilters}>
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-4 lg:items-end">
-          <div className="lg:col-span-2">
+        <div className={mainGridClass}>
+          <div className={`mb-0 ${searchColSpan}`}>
             <FormField
               form={form}
               name={searchFieldName}
@@ -100,14 +118,30 @@ function PostingFiltersCard<T extends FieldValues>({
             />
           </div>
 
-          <FormField
-            form={form}
-            name={sortFieldName}
-            label="Sort By"
-            selectOptions={sortOptions}
-          />
+          {enableOrganizationSearch && (
+            <div className={`mb-0 ${filterColSpan}`}>
+              <FormField
+                form={form}
+                name={'entity' as Path<T>}
+                label="Search for"
+                selectOptions={[
+                  { label: 'Postings', value: 'postings' },
+                  { label: 'Organizations', value: 'organizations' },
+                ]}
+              />
+            </div>
+          )}
 
-          <div className="flex items-end">
+          <div className={filterColSpan}>
+            <FormField
+              form={form}
+              name={sortFieldName}
+              label="Sort By"
+              selectOptions={entityValue === 'organizations' && organizationSortOptions ? organizationSortOptions : sortOptions}
+            />
+          </div>
+
+          <div className={`flex items-end ${buttonColSpan}`}>
             <Button
               color="primary"
               type="submit"

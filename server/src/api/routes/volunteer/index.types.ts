@@ -35,6 +35,18 @@ export type VolunteerCertificateOrganization = {
   signature_path: string | null;
 };
 
+export type VolunteerOrganizationSearchResult = {
+  id: number;
+  name: string;
+  description: string | null;
+  location_name: string | null;
+  logo_path: string | null;
+};
+
+export type VolunteerOrganizationSearchResponse = {
+  organizations: VolunteerOrganizationSearchResult[];
+};
+
 export type VolunteerCertificateResponse = {
   volunteer: Pick<VolunteerAccountWithoutPassword, 'id' | 'first_name' | 'last_name'>;
   total_hours: number;

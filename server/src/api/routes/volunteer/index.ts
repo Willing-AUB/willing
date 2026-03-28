@@ -10,6 +10,7 @@ import {
   VolunteerCreateResponse,
   VolunteerCertificateResponse,
   VolunteerMeResponse,
+  VolunteerOrganizationSearchResponse,
   VolunteerPinnedCrisesResponse,
   VolunteerProfileResponse,
 } from './index.types.js';
@@ -24,6 +25,7 @@ import {
 } from '../../../services/embeddings/updates.js';
 import { getVolunteerProfile } from '../../../services/volunteer/index.js';
 import { authorizeOnly } from '../../authorization.js';
+import { normalizeSearchTerms } from '../utils/postingList.js';
 
 const volunteerRouter = Router();
 const volunteerResponseColumns = [
@@ -118,6 +120,51 @@ volunteerRouter.get('/me', async (req, res: Response<VolunteerMeResponse>) => {
 volunteerRouter.get('/profile', async (req, res: Response<VolunteerProfileResponse>) => {
   const profile = await getVolunteerProfile(req.userJWT!.id);
   res.json(profile);
+});
+
+volunteerRouter.get('/organizations', async (req, res: Response<VolunteerOrganizationSearchResponse>) => {
+  const search = typeof req.query.search === 'string' ? req.query.search.trim() : '';
+
+  let query = database
+    .selectFrom('organization_account')
+    .select(['id', 'name', 'description', 'location_name', 'logo_path']);
+
+  if (search) {
+    const terms = normalizeSearchTerms(search);
+    query = query.where(({ and, or }) => and(
+      terms.map((term) => {
+        const likePattern = `%${term}%`;
+        return or([
+          sql<boolean>`lower(organization_account.name) LIKE ${likePattern}`,
+          sql<boolean>`regexp_replace(lower(organization_account.name), '[^a-z0-9]+', '', 'g') LIKE ${likePattern}`,
+          sql<boolean>`lower(organization_account.description) LIKE ${likePattern}`,
+          sql<boolean>`regexp_replace(lower(organization_account.description), '[^a-z0-9]+', '', 'g') LIKE ${likePattern}`,
+          sql<boolean>`lower(organization_account.location_name) LIKE ${likePattern}`,
+          sql<boolean>`regexp_replace(lower(organization_account.location_name), '[^a-z0-9]+', '', 'g') LIKE ${likePattern}`,
+        ]);
+      }),
+    ));
+  }
+
+  const sortBy = typeof req.query.sort_by === 'string' ? req.query.sort_by : 'name';
+  const sortDir = req.query.sort_dir === 'desc' ? 'desc' : 'asc';
+
+  const orderByColumn = sortBy === 'title' ? 'organization_account.name' : 'organization_account.name';
+
+  const organizationsRaw = await query
+    .orderBy(orderByColumn, sortDir)
+    .limit(30)
+    .execute();
+
+  const organizations = organizationsRaw.map(organization => ({
+    id: organization.id,
+    name: organization.name,
+    description: organization.description ?? null,
+    location_name: organization.location_name ?? null,
+    logo_path: organization.logo_path ?? null,
+  }));
+
+  res.json({ organizations });
 });
 
 volunteerRouter.get('/certificate', async (req, res: Response<VolunteerCertificateResponse>) => {
