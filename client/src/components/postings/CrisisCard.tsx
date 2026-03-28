@@ -11,7 +11,7 @@ type CrisisCardProps = {
 
 function CrisisCard({ crisis }: CrisisCardProps) {
   return (
-    <Card className="border border-base-300 bg-base-100 hover:border-primary hover:shadow-lg transition-all duration-200">
+    <Card className="border border-base-300 bg-base-100 hover:shadow-lg transition-all duration-200">
       <div className="relative">
         <div className="flex items-start justify-between">
           <div className="pr-8">
