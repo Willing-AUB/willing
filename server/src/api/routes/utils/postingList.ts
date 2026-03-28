@@ -228,13 +228,13 @@ export const sortPostingsBySharedSort = <T extends PostingSortLike>(
       }
       case 'start_date':
       case 'title': {
-      return compareNullableKeys(
-        left.title ?? '',
-        right.title ?? '',
-        sortDir,
-      );
-    }
-    default: {
+        return compareNullableKeys(
+          left.title ?? '',
+          right.title ?? '',
+          sortDir,
+        );
+      }
+      default: {
         const dateCompare = compareNullableKeys(
           normalizeDateKey(left.start_date),
           normalizeDateKey(right.start_date),
