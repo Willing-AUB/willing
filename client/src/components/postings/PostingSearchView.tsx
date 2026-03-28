@@ -156,6 +156,7 @@ function PostingSearchView({
 
   const [postings, setPostings] = useState<PostingWithContext[]>([]);
   const [organizations, setOrganizations] = useState<VolunteerOrganizationSearchResult[]>([]);
+  const [activeEntity, setActiveEntity] = useState<PostingSearchFilters['entity']>(defaultFilters.entity);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -212,7 +213,9 @@ function PostingSearchView({
   }, [fetchPostingsRequest, fetchUrl, filterPostings, enableOrganizationSearch]);
 
   const applyFilters = useCallback(async (formValues: PostingSearchFormValues) => {
-    await fetchPostings(fromPostingSearchFormValues(formValues));
+    const filters = fromPostingSearchFormValues(formValues);
+    setActiveEntity(filters.entity);
+    await fetchPostings(filters);
   }, [fetchPostings]);
 
   return (
@@ -329,8 +332,8 @@ function PostingSearchView({
             ? (
                 <EmptyState
                   Icon={icon}
-                  title="No postings or organizations found"
-                  description={emptyMessage}
+                  title={activeEntity === 'organizations' ? 'No organizations found' : 'No postings found'}
+                  description={activeEntity === 'organizations' ? 'No organizations found yet.' : emptyMessage}
                 />
               )
             : (
