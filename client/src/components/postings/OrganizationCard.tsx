@@ -1,5 +1,3 @@
-import { Link } from 'react-router-dom';
-
 import { SERVER_BASE_URL } from '../../utils/requestServer.ts';
 import Card from '../Card.tsx';
 
