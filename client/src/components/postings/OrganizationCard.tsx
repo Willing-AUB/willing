@@ -16,7 +16,7 @@ function OrganizationCard({ organization }: OrganizationCardProps) {
 
   return (
     <Card className="border border-base-300 bg-base-100 hover:border-secondary hover:shadow-lg transition-all duration-200">
-      <div className="p-4">
+      <div>
         <div className="flex items-center gap-3 mb-3">
           <Link to={`/organization/${organization.id}`} className="shrink-0">
             <div className="avatar avatar-placeholder">
