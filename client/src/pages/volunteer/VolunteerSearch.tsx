@@ -20,7 +20,7 @@ function VolunteerSearch() {
     <div className="grow bg-base-200">
       <PostingSearchView
         title="Search Opportunities"
-        subtitle="Browse all postings and organizations, and filter them down by dates, location, or skills."
+        subtitle="Browse all postings, organizations, and crises, and filter them down by dates, location, or skills."
         icon={undefined}
         showBack={false}
         actions={<PostingViewModeToggle />}
