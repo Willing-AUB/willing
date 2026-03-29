@@ -27,6 +27,7 @@ type PostingFiltersCardProps<T extends FieldValues> = {
   submitLabel?: string;
   submitIcon?: LucideIcon;
   topContent?: ReactNode;
+  extraFields?: (form: UseFormReturn<T>) => ReactNode;
 };
 
 function PostingFiltersCard<T extends FieldValues>({
@@ -45,6 +46,7 @@ function PostingFiltersCard<T extends FieldValues>({
   submitLabel = 'Search',
   submitIcon = Search,
   topContent,
+  extraFields,
 }: PostingFiltersCardProps<T>) {
   const form = useForm<T, undefined, T>({
     defaultValues: defaultValues as DefaultValues<T>,
@@ -99,9 +101,12 @@ function PostingFiltersCard<T extends FieldValues>({
     ? 'grid grid-cols-1 gap-3 lg:grid-cols-8 lg:items-end'
     : 'grid grid-cols-1 gap-4 lg:grid-cols-8 lg:items-end';
 
-  const searchColSpan = compact ? 'lg:col-span-4' : 'lg:col-span-4';
-  const filterColSpan = compact ? 'lg:col-span-2' : 'lg:col-span-2';
-  const buttonColSpan = compact ? 'lg:col-span-2' : 'lg:col-span-2';
+  const extraFieldsContent = extraFields ? extraFields(form) : null;
+  const hasExtra = Boolean(extraFieldsContent);
+  const searchColSpan = hasExtra ? 'lg:col-span-3' : 'lg:col-span-4';
+  const filterColSpan = 'lg:col-span-2';
+  const extraColSpan = hasExtra ? 'lg:col-span-2' : '';
+  const buttonColSpan = hasExtra ? 'lg:col-span-1' : 'lg:col-span-2';
 
   return (
     <Card>
@@ -135,6 +140,12 @@ function PostingFiltersCard<T extends FieldValues>({
               selectOptions={entityValue === 'organizations' && organizationSortOptions ? organizationSortOptions : sortOptions}
             />
           </div>
+
+          {extraFieldsContent && (
+            <div className={`${extraColSpan}`}>
+              {extraFieldsContent}
+            </div>
+          )}
 
           <div className={`flex self-start pt-[28.5px] ${buttonColSpan}`}>
             <Button

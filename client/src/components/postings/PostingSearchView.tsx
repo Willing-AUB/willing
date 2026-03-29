@@ -44,7 +44,7 @@ export type PostingSearchFilters = SharedPostingFilterFields & {
   hideFull: boolean;
   crisisId: 'all' | `${number}`;
   entity: 'postings' | 'organizations' | 'crises';
-  crisisFilter?: 'pinned_only' | 'unpinned_only';
+  crisisFilter: 'all' | 'pinned_only' | 'unpinned_only';
 };
 
 type PostingCrisisOption = {
@@ -52,10 +52,11 @@ type PostingCrisisOption = {
   name: string;
 };
 
-type CrisisPostingSortOptionValue = 'title_asc' | 'title_desc' | 'pinned_only' | 'unpinned_only';
+type CrisisPostingSortOptionValue = 'title_asc' | 'title_desc';
 
 type PostingSearchFormValues = Omit<PostingSearchFilters, 'sortBy' | 'sortDir'> & {
   sortOption: VolunteerPostingSortOptionValue | OrganizationPostingSortOptionValue | CrisisPostingSortOptionValue;
+  crisisFilter: PostingSearchFilters['crisisFilter'];
   entity: PostingSearchFilters['entity'];
 };
 
@@ -92,14 +93,9 @@ const toPostingSearchFormValues = (filters: PostingSearchFilters): PostingSearch
   sortOption: filters.entity === 'organizations'
     ? toOrganizationPostingSortOptionValue(filters.sortBy as OrganizationPostingSortBy, filters.sortDir)
     : filters.entity === 'crises'
-      ? (filters.crisisFilter === 'pinned_only'
-          ? 'pinned_only'
-          : filters.crisisFilter === 'unpinned_only'
-            ? 'unpinned_only'
-            : filters.sortDir === 'desc'
-              ? 'title_desc'
-              : 'title_asc')
+      ? (filters.sortDir === 'desc' ? 'title_desc' : 'title_asc')
       : toVolunteerPostingSortOptionValue(filters.sortBy as VolunteerPostingSortBy, filters.sortDir),
+  crisisFilter: filters.crisisFilter,
   startDateFrom: filters.startDateFrom,
   endDateTo: filters.endDateTo,
   startTimeFrom: filters.startTimeFrom,
@@ -112,33 +108,17 @@ const toPostingSearchFormValues = (filters: PostingSearchFilters): PostingSearch
 const fromPostingSearchFormValues = (values: PostingSearchFormValues): PostingSearchFilters => {
   let querySortBy: VolunteerPostingSortBy | OrganizationPostingSortBy = 'title';
   let querySortDir: PostingSortDir = 'asc';
-  let crisisFilter = undefined as undefined | 'pinned_only' | 'unpinned_only';
+  let crisisFilter: 'all' | 'pinned_only' | 'unpinned_only' = 'all';
 
   if (values.entity === 'organizations') {
     const selectedSortOption = resolveOrganizationPostingSortOption(values.sortOption as OrganizationPostingSortOptionValue);
     querySortBy = 'title';
     querySortDir = selectedSortOption.sortDir;
   } else if (values.entity === 'crises') {
-    switch (values.sortOption) {
-      case 'title_desc':
-        querySortBy = 'title';
-        querySortDir = 'desc';
-        break;
-      case 'pinned_only':
-        querySortBy = 'title';
-        querySortDir = 'asc';
-        crisisFilter = 'pinned_only';
-        break;
-      case 'unpinned_only':
-        querySortBy = 'title';
-        querySortDir = 'asc';
-        crisisFilter = 'unpinned_only';
-        break;
-      case 'title_asc':
-      default:
-        querySortBy = 'title';
-        querySortDir = 'asc';
-    }
+    const selected = values.sortOption as CrisisPostingSortOptionValue;
+    querySortBy = 'title';
+    querySortDir = selected === 'title_desc' ? 'desc' : 'asc';
+    crisisFilter = values.crisisFilter;
   } else {
     const selectedSortOption = resolveVolunteerPostingSortOption(values.sortOption as VolunteerPostingSortOptionValue);
     querySortBy = selectedSortOption.sortBy as VolunteerPostingSortBy;
@@ -189,6 +169,7 @@ function PostingSearchView({
     hideFull: false,
     crisisId: 'all',
     entity: 'postings',
+    crisisFilter: 'all',
     ...initialFilters,
   }), [initialFilters]);
 
@@ -199,6 +180,7 @@ function PostingSearchView({
     entity: activeEntity,
     sortBy: activeEntity === 'organizations' || activeEntity === 'crises' ? 'title' : defaultFilters.sortBy,
     sortDir: activeEntity === 'organizations' || activeEntity === 'crises' ? 'asc' : defaultFilters.sortDir,
+    crisisFilter: activeEntity === 'crises' ? defaultFilters.crisisFilter ?? 'all' : 'all',
   }), [defaultFilters, activeEntity]);
 
   const defaultFormValues = useMemo(() => toPostingSearchFormValues(activeFilters), [activeFilters]);
@@ -278,7 +260,20 @@ function PostingSearchView({
       const postProcessFilteredPostings = filterPostings ? filterPostings(postingResponse.postings) : postingResponse.postings;
       setPostings(postProcessFilteredPostings);
       setOrganizations(organizationResponse.organizations);
-      setCrises(crisisResponse.crises);
+
+      let orderedCrises = crisisResponse.crises;
+      if (activeFilters.entity === 'crises') {
+        orderedCrises = [...orderedCrises].sort((a, b) => {
+          if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+          const nameA = a.name || '';
+          const nameB = b.name || '';
+          return activeFilters.sortDir === 'desc'
+            ? nameB.localeCompare(nameA)
+            : nameA.localeCompare(nameB);
+        });
+      }
+
+      setCrises(orderedCrises);
     } catch (fetchError) {
       setPostings([]);
       setOrganizations([]);
@@ -361,10 +356,24 @@ function PostingSearchView({
             ? [
                 { label: 'Title (A-Z)', value: 'title_asc' },
                 { label: 'Title (Z-A)', value: 'title_desc' },
-                { label: 'Pinned only', value: 'pinned_only' },
-                { label: 'Unpinned only', value: 'unpinned_only' },
               ]
             : volunteerPostingSortOptions.map(option => ({ label: option.label, value: option.value }))}
+        extraFields={activeEntity === 'crises'
+          ? form => (
+            <div className="lg:col-span-2">
+              <FormField
+                form={form}
+                name="crisisFilter"
+                label="Crisis visibility"
+                selectOptions={[
+                  { label: 'All crises', value: 'all' },
+                  { label: 'Pinned only', value: 'pinned_only' },
+                  { label: 'Unpinned only', value: 'unpinned_only' },
+                ]}
+              />
+            </div>
+          )
+          : undefined}
         showAdvanced={activeEntity === 'postings'}
         compact={compact}
         getHasAdvancedFiltersApplied={values => activeEntity === 'postings'
