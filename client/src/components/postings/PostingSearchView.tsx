@@ -1,4 +1,4 @@
-import { TextSearch, type LucideIcon } from 'lucide-react';
+import { TextSearch, ClipboardList, Building2, AlertTriangle, type LucideIcon } from 'lucide-react';
 import { type ReactNode, useCallback, useMemo, useState } from 'react';
 
 import {
@@ -316,6 +316,7 @@ function PostingSearchView({
               className={`btn join-item flex-1 ${activeEntity === 'postings' ? 'btn-primary' : 'btn-outline'}`}
               onClick={() => setActiveEntity('postings')}
             >
+              <ClipboardList className="mr-2 h-4 w-4 shrink-0" />
               Postings
             </button>
             {enableOrganizationSearch && (
@@ -324,6 +325,7 @@ function PostingSearchView({
                 className={`btn join-item flex-1 ${activeEntity === 'organizations' ? 'btn-primary' : 'btn-outline'}`}
                 onClick={() => setActiveEntity('organizations')}
               >
+                <Building2 className="mr-2 h-4 w-4 shrink-0" />
                 Organizations
               </button>
             )}
@@ -333,6 +335,7 @@ function PostingSearchView({
                 className={`btn join-item flex-1 ${activeEntity === 'crises' ? 'btn-primary' : 'btn-outline'}`}
                 onClick={() => setActiveEntity('crises')}
               >
+                <AlertTriangle className="mr-2 h-4 w-4 shrink-0" />
                 Crises
               </button>
             )}
