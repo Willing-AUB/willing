@@ -460,7 +460,7 @@ function PostingSearchView({
                     />
                   )
                 : (
-                    <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                       {crises.map(crisis => (
                         <CrisisCard key={crisis.id} crisis={crisis} />
                       ))}
@@ -478,7 +478,7 @@ function PostingSearchView({
               : (
                   <>
                     {postings.length > 0 && (
-                      <div className="mt-4">
+                      <div>
                         <PostingCollection
                           postings={postings}
                           showCrisis
@@ -489,7 +489,7 @@ function PostingSearchView({
                     )}
 
                     {enableOrganizationSearch && organizations.length > 0 && (
-                      <div className="mt-4">
+                      <div>
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                           {organizations.map(organization => (
                             <OrganizationCard
