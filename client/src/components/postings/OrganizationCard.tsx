@@ -13,12 +13,9 @@ function OrganizationCard({ organization }: OrganizationCardProps) {
     : null;
 
   return (
-    <Card
-      className="border border-base-300 bg-base-100 hover:shadow-lg transition-all duration-200"
-      title={organization.name}
-      link={`/organization/${organization.id}`}
-      left={(
-        <div className="avatar avatar-placeholder">
+    <Card className="border border-base-300 bg-base-100 hover:shadow-lg transition-all duration-200">
+      <div className="flex items-start gap-4">
+        <div className="avatar avatar-placeholder shrink-0">
           {logoUrl
             ? (
                 <div className="w-12 h-12 rounded-full overflow-hidden ring-1 ring-base-300 bg-base-100 flex items-center justify-center">
@@ -35,19 +32,26 @@ function OrganizationCard({ organization }: OrganizationCardProps) {
                 </div>
               )}
         </div>
-      )}
-      right={(
-        <span className="badge badge-secondary text-sm py-2">
+
+        <div className="flex-1 min-w-0">
+          <h3 className="text-lg font-semibold">
+            <a href={`/organization/${organization.id}`} className="link link-primary link-hover no-underline hover:underline">
+              {organization.name}
+            </a>
+          </h3>
+          <p className="text-sm text-base-content/70 mt-1">
+            {organization.location_name || 'Location not set'}
+          </p>
+        </div>
+
+        <span className="badge badge-secondary text-sm py-2 whitespace-nowrap">
           {organization.posting_count}
           {' '}
           postings
         </span>
-      )}
-    >
-      <p className="text-sm text-base-content">
-        {organization.location_name || 'Location not set'}
-      </p>
-      <p className="text-sm text-base-content/70 line-clamp-3 mt-1">
+      </div>
+
+      <p className="text-sm text-base-content/70 mt-3 line-clamp-3 ml-1">
         {organization.description || 'No description provided.'}
       </p>
     </Card>
