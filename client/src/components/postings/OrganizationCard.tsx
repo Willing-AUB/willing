@@ -13,7 +13,7 @@ function OrganizationCard({ organization }: OrganizationCardProps) {
     : null;
 
   return (
-    <Card className="border border-base-300 bg-base-100 hover:shadow-lg transition-all duration-200">
+    <Card>
       <div className="flex items-start gap-4">
         <div className="avatar avatar-placeholder shrink-0">
           {logoUrl

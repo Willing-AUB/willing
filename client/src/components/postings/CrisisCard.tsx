@@ -11,7 +11,6 @@ type CrisisCardProps = {
 function CrisisCard({ crisis }: CrisisCardProps) {
   return (
     <Card
-      className="border border-base-300 bg-base-100 hover:shadow-lg transition-all duration-200"
       title={crisis.name}
       description={crisis.description || 'No crisis description provided.'}
       link={`/volunteer/crises/${crisis.id}/postings`}
