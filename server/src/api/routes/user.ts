@@ -2,6 +2,7 @@ import crypto from 'crypto';
 
 import bcrypt from 'bcrypt';
 import { Router, type Response } from 'express';
+import { sql } from 'kysely';
 import * as jose from 'jose';
 import zod from 'zod';
 
@@ -28,6 +29,7 @@ const organizationLoginColumns = [
   'longitude',
   'location_name',
   'password',
+  'token_version',
 ] as const;
 
 const volunteerLoginColumns = [
@@ -40,6 +42,7 @@ const volunteerLoginColumns = [
   'gender',
   'cv_path',
   'description',
+  'token_version',
 ] as const;
 
 const forgotPasswordRequestSchema = zod.object({
@@ -92,6 +95,7 @@ userRouter.post('/login', async (req, res: Response<UserLoginResponse>) => {
   const token = await new jose.SignJWT({
     id: (organizationAccount || volunteerAccount)?.id,
     role: organizationAccount ? 'organization' : 'volunteer',
+    token_version: (organizationAccount || volunteerAccount)?.token_version || 0,
   }).setIssuedAt()
     .setProtectedHeader({ alg: 'HS256' })
     .setExpirationTime('7d')
@@ -183,13 +187,13 @@ userRouter.post('/forgot-password/reset', async (req, res: Response<UserForgotPa
     await database
       .updateTable('organization_account')
       .where('id', '=', resetToken.user_id)
-      .set({ password: hashedPassword })
+      .set({ password: hashedPassword, token_version: sql`token_version + 1` })
       .execute();
   } else if (resetToken.role === 'volunteer') {
     await database
       .updateTable('volunteer_account')
       .where('id', '=', resetToken.user_id)
-      .set({ password: hashedPassword })
+      .set({ password: hashedPassword, token_version: sql`token_version + 1` })
       .execute();
   }
 

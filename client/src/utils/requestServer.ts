@@ -15,7 +15,10 @@ export default async function requestServer<ReturnType>(path: string, { body, me
   };
 
   if (includeJwt) {
-    headers.append('Authorization', 'Bearer ' + localStorage.getItem('jwt'));
+    const token = sessionStorage.getItem('jwt');
+    if (token) {
+      headers.append('Authorization', 'Bearer ' + token);
+    }
   }
 
   if (body instanceof FormData) {
@@ -33,6 +36,12 @@ export default async function requestServer<ReturnType>(path: string, { body, me
   }
 
   const response = await fetch(url, options);
+
+  if (response.headers.get('x-jwt-status') === 'invalid') {
+    sessionStorage.removeItem('jwt');
+    localStorage.removeItem('jwt');
+  }
+
   const json = await response.json();
 
   if (response.status >= 400) {

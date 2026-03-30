@@ -56,6 +56,7 @@ adminRouter.post('/login', async (req, res: Response<AdminLoginResponse>) => {
   const token = await new jose.SignJWT({
     id: account.id,
     role: 'admin',
+    token_version: account.token_version,
   })
     .setIssuedAt()
     .setProtectedHeader({ alg: 'HS256' })

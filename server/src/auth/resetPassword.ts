@@ -5,6 +5,7 @@ import zod from 'zod';
 
 import config from '../config.ts';
 import database from '../db/index.ts';
+import { sql } from 'kysely';
 import { type Database } from '../db/tables/index.ts';
 import { passwordSchema } from '../schemas/index.ts';
 
@@ -43,10 +44,17 @@ export default async function resetPassword(req: Request, res: Response<ResetPas
     .where('id', '=', req.userJWT!.id)
     .set({
       password: await bcrypt.hash(body.newPassword, 10),
+      token_version: sql`token_version + 1`,
     })
     .execute();
 
-  const token = await new jose.SignJWT({ id: req.userJWT!.id, role: req.userJWT!.role })
+  const { token_version } = await database
+    .selectFrom(accountTable)
+    .select('token_version')
+    .where('id', '=', req.userJWT!.id)
+    .executeTakeFirstOrThrow();
+
+  const token = await new jose.SignJWT({ id: req.userJWT!.id, role: req.userJWT!.role, token_version })
     .setIssuedAt()
     .setProtectedHeader({ alg: 'HS256' })
     .setExpirationTime('7d')
