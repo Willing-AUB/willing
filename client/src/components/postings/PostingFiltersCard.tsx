@@ -22,7 +22,6 @@ type PostingFiltersCardProps<T extends FieldValues> = {
   sortOptions: FilterSelectOption[];
   organizationSortOptions?: FilterSelectOption[];
   showAdvanced?: boolean;
-  compact?: boolean;
   title?: string;
   submitLabel?: string;
   submitIcon?: LucideIcon;
@@ -41,7 +40,6 @@ function PostingFiltersCard<T extends FieldValues>({
   sortOptions,
   organizationSortOptions,
   showAdvanced = true,
-  compact = false,
   title = 'Filters',
   submitLabel = 'Search',
   submitIcon = Search,
@@ -97,16 +95,7 @@ function PostingFiltersCard<T extends FieldValues>({
     await onApply(defaultValues);
   };
 
-  const mainGridClass = compact
-    ? 'grid grid-cols-1 gap-3 lg:grid-cols-8 lg:items-end'
-    : 'grid grid-cols-1 gap-4 lg:grid-cols-8 lg:items-end';
-
   const extraFieldsContent = extraFields ? extraFields(form) : null;
-  const hasExtra = Boolean(extraFieldsContent);
-  const searchColSpan = hasExtra ? 'lg:col-span-3' : 'lg:col-span-4';
-  const filterColSpan = 'lg:col-span-2';
-  const extraColSpan = hasExtra ? 'lg:col-span-2' : '';
-  const buttonColSpan = hasExtra ? 'lg:col-span-1' : 'lg:col-span-2';
 
   return (
     <Card>
@@ -121,8 +110,8 @@ function PostingFiltersCard<T extends FieldValues>({
       )}
 
       <form className="space-y-4" onSubmit={applyFilters}>
-        <div className={mainGridClass}>
-          <div className={`mb-0 ${searchColSpan}`}>
+        <div className="flex gap-4">
+          <div className="mb-0 flex-2">
             <FormField
               form={form}
               name={searchFieldName}
@@ -132,32 +121,19 @@ function PostingFiltersCard<T extends FieldValues>({
             />
           </div>
 
-          <div className={filterColSpan}>
+          {extraFieldsContent && (
+            <div className="flex-1">
+              {extraFieldsContent}
+            </div>
+          )}
+
+          <div className="flex-1">
             <FormField
               form={form}
               name={sortFieldName}
               label="Sort By"
               selectOptions={entityValue === 'organizations' && organizationSortOptions ? organizationSortOptions : sortOptions}
             />
-          </div>
-
-          {extraFieldsContent && (
-            <div className={`${extraColSpan}`}>
-              {extraFieldsContent}
-            </div>
-          )}
-
-          <div className={`flex self-start pt-[28.5px] ${buttonColSpan}`}>
-            <Button
-              color="primary"
-              type="submit"
-              disabled={!hasPendingChanges}
-              Icon={submitIcon}
-              layout="block"
-              className="h-11 w-full"
-            >
-              {submitLabel}
-            </Button>
           </div>
         </div>
 
@@ -173,6 +149,8 @@ function PostingFiltersCard<T extends FieldValues>({
             </Button>
           )}
 
+          <div className="flex-1" />
+
           <Button
             type="button"
             color="ghost"
@@ -181,6 +159,17 @@ function PostingFiltersCard<T extends FieldValues>({
             Icon={RotateCcw}
           >
             Reset
+          </Button>
+
+          <Button
+            color="primary"
+            type="submit"
+            disabled={!hasPendingChanges}
+            Icon={submitIcon}
+            layout="wide"
+            className="h-11 w-full"
+          >
+            {submitLabel}
           </Button>
         </div>
 
