@@ -14,7 +14,7 @@ function OrganizationCard({ organization }: OrganizationCardProps) {
 
   return (
     <Card>
-      <div className="flex items-start gap-4">
+      <div className="flex items-center gap-4">
         <div className="avatar avatar-placeholder shrink-0">
           {logoUrl
             ? (
