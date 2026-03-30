@@ -108,12 +108,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const onStorage = (event: StorageEvent) => {
-      if (event.key === 'auth-event' && event.newValue?.startsWith('signout-others')) {
+      if (event.key !== 'auth-event' || !event.newValue) return;
+
+      if (event.newValue.startsWith('signout-others')) {
         if (sessionStorage.getItem('jwt')) {
           sessionStorage.removeItem('jwt');
           setUser(undefined);
           navigate('/login', { replace: true });
         }
+        return;
+      }
+
+      if (event.newValue.startsWith('login-')) {
+        // event format: login-<role>-<id>-<timestamp>
+        const [, eventRole, eventId] = event.newValue.split('-');
+        if (!eventRole || !eventId) return;
+
+        if (!sessionStorage.getItem('jwt')) return;
+
+        const currentRole = user?.role;
+        const currentId = user?.account?.id?.toString();
+
+        if (currentRole === eventRole && currentId === eventId) return;
+
+        sessionStorage.removeItem('jwt');
+        setUser(undefined);
+        navigate('/login', { replace: true });
       }
     };
 
@@ -122,7 +142,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       window.removeEventListener('storage', onStorage);
     };
-  }, [navigate]);
+  }, [navigate, user]);
 
   const loginAdmin = useCallback(async (email: string, password: string) => {
     console.log('Attempting admin login with email:', email);
@@ -131,9 +151,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       body: { email, password },
     });
 
-    window.localStorage.setItem('auth-event', 'signout-others-' + Date.now());
     sessionStorage.setItem('jwt', response.token);
     setUser({ role: 'admin', account: response.admin });
+    window.localStorage.setItem('auth-event', `login-admin-${response.admin.id}-${Date.now()}`);
   }, []);
 
   const loginUser = useCallback(async (email: string, password: string) => {
@@ -142,13 +162,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       body: { email, password },
     });
 
-    window.localStorage.setItem('auth-event', 'signout-others-' + Date.now());
-
     sessionStorage.setItem('jwt', response.token);
+    const account = response.role === 'organization' ? response.organization! : response.volunteer!;
     setUser({
       role: response.role,
-      account: response.role === 'organization' ? response.organization : response.volunteer,
+      account,
     });
+    window.localStorage.setItem('auth-event', `login-${response.role}-${account.id}-${Date.now()}`);
   }, []);
 
   const createVolunteer = async (volunteer: NewVolunteerAccount) => {
@@ -162,6 +182,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       role: 'volunteer',
       account: response.volunteer,
     });
+    window.localStorage.setItem('auth-event', `login-volunteer-${response.volunteer.id}-${Date.now()}`);
   };
 
   const changePassword = useCallback(async (currentPassword: string, newPassword: string) => {
