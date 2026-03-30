@@ -1,11 +1,11 @@
 import bcrypt from 'bcrypt';
 import { type Request, type Response } from 'express';
 import * as jose from 'jose';
+import { sql } from 'kysely';
 import zod from 'zod';
 
 import config from '../config.ts';
 import database from '../db/index.ts';
-import { sql } from 'kysely';
 import { type Database } from '../db/tables/index.ts';
 import { passwordSchema } from '../schemas/index.ts';
 

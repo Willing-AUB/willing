@@ -2,8 +2,8 @@ import crypto from 'crypto';
 
 import bcrypt from 'bcrypt';
 import { Router, type Response } from 'express';
-import { sql } from 'kysely';
 import * as jose from 'jose';
+import { sql } from 'kysely';
 import zod from 'zod';
 
 import {
