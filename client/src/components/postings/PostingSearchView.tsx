@@ -29,6 +29,7 @@ import Loading from '../Loading.tsx';
 import OrganizationCard from './OrganizationCard.tsx';
 import PostingCollection from './PostingCollection.tsx';
 import PostingFiltersCard from './PostingFiltersCard.tsx';
+import Button from '../Button.tsx';
 
 import type { VolunteerCrisesResponse, VolunteerOrganizationSearchResponse, VolunteerPostingSearchResponse, VolunteerEnrollmentsResponse } from '../../../../server/src/api/types.ts';
 import type { Crisis } from '../../../../server/src/db/tables/index.ts';
@@ -84,7 +85,6 @@ type PostingSearchViewProps = {
   enableCrisisFilter?: boolean;
   crisisOptions?: PostingCrisisOption[];
   enableOrganizationSearch?: boolean;
-  compact?: boolean;
   showEntityTabs?: boolean;
 };
 
@@ -155,7 +155,6 @@ function PostingSearchView({
   enableCrisisFilter = false,
   crisisOptions = [],
   enableOrganizationSearch = false,
-  compact = false,
   showEntityTabs = true,
 }: PostingSearchViewProps) {
   const defaultFilters = useMemo<PostingSearchFilters>(() => ({
@@ -304,35 +303,41 @@ function PostingSearchView({
       />
 
       {showEntityTabs && (
-        <div className="mb-4 w-full">
+        <div className="w-full">
           <div className="join w-full">
-            <button
+            <Button
               type="button"
-              className={`btn join-item flex-1 ${activeEntity === 'postings' ? 'btn-primary' : 'btn-outline'}`}
+              className="join-item flex-1"
+              color={activeEntity === 'postings' ? 'primary' : undefined}
+              style={activeEntity === 'postings' ? undefined : 'outline'}
               onClick={() => setActiveEntity('postings')}
+              Icon={ClipboardList}
             >
-              <ClipboardList className="mr-2 h-4 w-4 shrink-0" />
               Postings
-            </button>
+            </Button>
             {enableOrganizationSearch && (
-              <button
+              <Button
                 type="button"
-                className={`btn join-item flex-1 ${activeEntity === 'organizations' ? 'btn-primary' : 'btn-outline'}`}
+                className="join-item flex-1"
+                color={activeEntity === 'organizations' ? 'primary' : undefined}
+                style={activeEntity === 'organizations' ? undefined : 'outline'}
                 onClick={() => setActiveEntity('organizations')}
+                Icon={Building2}
               >
-                <Building2 className="mr-2 h-4 w-4 shrink-0" />
                 Organizations
-              </button>
+              </Button>
             )}
             {enableCrisisFilter && (
-              <button
+              <Button
                 type="button"
-                className={`btn join-item flex-1 ${activeEntity === 'crises' ? 'btn-primary' : 'btn-outline'}`}
+                className="join-item flex-1"
+                color={activeEntity === 'crises' ? 'primary' : undefined}
+                style={activeEntity === 'crises' ? undefined : 'outline'}
                 onClick={() => setActiveEntity('crises')}
+                Icon={AlertTriangle}
               >
-                <AlertTriangle className="mr-2 h-4 w-4 shrink-0" />
                 Crises
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -375,7 +380,6 @@ function PostingSearchView({
           )
           : undefined}
         showAdvanced={activeEntity === 'postings'}
-        compact={compact}
         getHasAdvancedFiltersApplied={values => activeEntity === 'postings'
           ? (hasSharedAdvancedPostingFilters(values) || values.hideFull || values.crisisId !== 'all')
           : false}

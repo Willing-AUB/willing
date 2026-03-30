@@ -27,7 +27,6 @@ function VolunteerSearch() {
         fetchUrl="/volunteer/posting?include_applied=true"
         enableCrisisFilter
         enableOrganizationSearch
-        compact
         crisisOptions={pinnedCrises?.map(crisis => ({
           id: crisis.id,
           name: crisis.name,
