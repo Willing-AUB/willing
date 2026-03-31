@@ -1025,17 +1025,6 @@ function PostingPage() {
                         )}
                       </div>
                       <div className="space-y-2">
-                        {formValues.max_volunteers
-                          ? (
-                              <div className="flex items-center gap-2">
-                                <Users size={16} className="text-primary" />
-                                <div>
-                                  <p className="text-xs opacity-70 font-semibold">MAX VOLUNTEERS</p>
-                                  <span className="text-sm">{formValues.max_volunteers}</span>
-                                </div>
-                              </div>
-                            )
-                          : null}
                         {formValues.minimum_age && (
                           <div className="flex items-center gap-2">
                             <Cake size={16} className="text-primary" />
