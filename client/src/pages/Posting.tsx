@@ -685,12 +685,32 @@ function PostingPage() {
     return new Date() >= getPostingStartDateTime(posting);
   }, [isVolunteerView, posting]);
 
-  const isPostingFull = useMemo(() => {
-    if (!posting?.max_volunteers) return false;
-    const currentEnrollmentCount = isVolunteerView ? postingEnrollmentCount : enrollments.length;
-    return currentEnrollmentCount >= posting.max_volunteers;
-  }, [isVolunteerView, postingEnrollmentCount, posting?.max_volunteers, enrollments.length]);
+  const currentEnrollmentCount = useMemo(() => {
+    if (!posting) return 0;
+    return isVolunteerView ? postingEnrollmentCount : enrollments.length;
+  }, [isVolunteerView, posting, postingEnrollmentCount, enrollments.length]);
 
+  const maxVolunteers = posting?.max_volunteers;
+
+  const overMaxVolunteerCount = useMemo(() => {
+    if (!maxVolunteers) return 0;
+    return Math.max(0, currentEnrollmentCount - maxVolunteers);
+  }, [currentEnrollmentCount, maxVolunteers]);
+
+  const isPostingFull = useMemo(() => {
+    if (!maxVolunteers) return false;
+    return currentEnrollmentCount >= maxVolunteers;
+  }, [currentEnrollmentCount, maxVolunteers]);
+
+  const volunteerProgressPercent = useMemo(() => {
+    if (!maxVolunteers || maxVolunteers <= 0) return 0;
+    return Math.min(100, Math.round((currentEnrollmentCount / maxVolunteers) * 100));
+  }, [currentEnrollmentCount, maxVolunteers]);
+
+  const remainingSpots = useMemo(() => {
+    if (maxVolunteers == null) return undefined;
+    return Math.max(0, maxVolunteers - currentEnrollmentCount);
+  }, [currentEnrollmentCount, maxVolunteers]);
   if (loading) {
     return (
       <div className="grow bg-base-200">
@@ -1109,6 +1129,43 @@ function PostingPage() {
                     ? 'Volunteers are accepted automatically.'
                     : 'Volunteers must be accepted by the organization.'}
               </p>
+            </Card>
+
+            <Card
+              title="Capacity"
+              description="Number of volunteers still needed"
+              color="secondary"
+              Icon={Users}
+            >
+              <div className="space-y-2">
+                <progress
+                  className="progress progress-secondary w-full"
+                  value={volunteerProgressPercent}
+                  max={100}
+                  aria-label="Volunteer capacity progress"
+                />
+                <p className="text-xs opacity-70">
+                  {maxVolunteers
+                    ? `${currentEnrollmentCount} / ${maxVolunteers} volunteers`
+                    : `${currentEnrollmentCount} volunteers`}
+                </p>
+                {maxVolunteers != null
+                  ? (
+                      <p className={`text-xs ${(remainingSpots ?? 0) === 0 ? 'text-error font-semibold' : 'text-success'}`}>
+                        {(remainingSpots ?? 0) > 0
+                          ? `${remainingSpots} spot${remainingSpots === 1 ? '' : 's'} remaining`
+                          : 'No spots remaining'}
+                      </p>
+                    )
+                  : (
+                      <p className="text-xs opacity-70">No maximum volunteers set.</p>
+                    )}
+                {maxVolunteers != null && overMaxVolunteerCount > 0 && (
+                  <p className="text-xs text-error font-semibold">
+                    {`${overMaxVolunteerCount} volunteer${overMaxVolunteerCount === 1 ? '' : 's'} over max`}
+                  </p>
+                )}
+              </div>
             </Card>
 
             {!isVolunteerView && (
