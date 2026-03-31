@@ -581,10 +581,12 @@ function PostingPage() {
         type: 'success',
         message: 'Application submitted successfully.',
       });
+
+      await loadPosting();
     } finally {
       setApplying(false);
     }
-  }, [applyToPosting, id, hasPendingApplication, isEnrolled, notifications]);
+  }, [applyToPosting, id, hasPendingApplication, isEnrolled, notifications, loadPosting]);
 
   const withdrawApplication = useCallback(async () => {
     if (!id || (!hasPendingApplication && !isEnrolled)) return;
@@ -601,10 +603,12 @@ function PostingPage() {
         type: 'success',
         message: isEnrolled ? 'Left volunteering position.' : 'Application withdrawn successfully.',
       });
+
+      await loadPosting();
     } finally {
       setWithdrawing(false);
     }
-  }, [id, hasPendingApplication, isEnrolled, notifications, withdrawFromPosting]);
+  }, [id, hasPendingApplication, isEnrolled, notifications, withdrawFromPosting, loadPosting]);
 
   const acceptApplication = useCallback(async (applicationId: number) => {
     if (!id) return;
@@ -1138,12 +1142,14 @@ function PostingPage() {
               Icon={Users}
             >
               <div className="space-y-2">
-                <progress
-                  className="progress progress-secondary w-full"
-                  value={volunteerProgressPercent}
-                  max={100}
-                  aria-label="Volunteer capacity progress"
-                />
+                {maxVolunteers != null && (
+                  <progress
+                    className="progress progress-secondary w-full"
+                    value={volunteerProgressPercent}
+                    max={100}
+                    aria-label="Volunteer capacity progress"
+                  />
+                )}
                 <p className="text-xs opacity-70">
                   {maxVolunteers
                     ? `${currentEnrollmentCount} / ${maxVolunteers} volunteers`
@@ -1158,7 +1164,7 @@ function PostingPage() {
                       </p>
                     )
                   : (
-                      <p className="text-xs opacity-70">No maximum volunteers set.</p>
+                      <p className="text-xs opacity-70">No maximum number of volunteers set</p>
                     )}
                 {maxVolunteers != null && overMaxVolunteerCount > 0 && (
                   <p className="text-xs text-error font-semibold">
