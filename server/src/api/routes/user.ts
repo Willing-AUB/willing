@@ -1,9 +1,7 @@
 import crypto from 'crypto';
 
-import bcrypt from 'bcrypt';
 import { Router, type Response } from 'express';
-import * as jose from 'jose';
-import { sql } from 'kysely';
+import { sql, type Kysely } from 'kysely';
 import zod from 'zod';
 
 import {
@@ -12,13 +10,13 @@ import {
   type UserLoginResponse,
 } from './user.types.ts';
 import removePassword from '../../auth/removePassword.ts';
-import config from '../../config.ts';
-import database from '../../db/index.ts';
+import { type Database } from '../../db/tables/index.ts';
 import { passwordSchema } from '../../schemas/index.ts';
+import { compare, hash } from '../../services/bcrypt/index.ts';
+import { generateJWT } from '../../services/jwt/index.ts';
 import { sendPasswordResetEmail } from '../../services/smtp/emails.ts';
 import { loginInfoSchema } from '../../types.ts';
 
-const userRouter = Router();
 const organizationLoginColumns = [
   'id',
   'name',
@@ -46,7 +44,7 @@ const volunteerLoginColumns = [
 ] as const;
 
 const forgotPasswordRequestSchema = zod.object({
-  email: zod.email(),
+  email: zod.string().email(),
 });
 
 const forgotPasswordResetSchema = zod.object({
@@ -54,155 +52,158 @@ const forgotPasswordResetSchema = zod.object({
   password: passwordSchema,
 });
 
-userRouter.post('/login', async (req, res: Response<UserLoginResponse>) => {
-  const body = loginInfoSchema.parse(req.body);
+function createUserRouter(db: Kysely<Database>) {
+  const userRouter = Router();
 
-  let organizationAccount;
-  let volunteerAccount;
+  userRouter.post('/login', async (req, res: Response<UserLoginResponse>) => {
+    const body = loginInfoSchema.parse(req.body);
 
-  // eslint-disable-next-line prefer-const
-  organizationAccount = await database
-    .selectFrom('organization_account')
-    .select(organizationLoginColumns)
-    .where('organization_account.email', '=', body.email)
-    .executeTakeFirst();
-
-  if (!organizationAccount) {
-    volunteerAccount = await database
-      .selectFrom('volunteer_account')
-      .select(volunteerLoginColumns)
-      .where('volunteer_account.email', '=', body.email)
-      .executeTakeFirst();
-  }
-
-  if ((!organizationAccount) && (!volunteerAccount)) {
-    res.status(403);
-    throw new Error('Invalid email or password');
-  }
-
-  let valid;
-  if (organizationAccount)
-    valid = await bcrypt.compare(body.password, organizationAccount.password);
-
-  if (volunteerAccount)
-    valid = await bcrypt.compare(body.password, volunteerAccount.password);
-
-  if (!valid) {
-    res.status(403);
-    throw new Error('Invalid email or password');
-  }
-
-  const token = await new jose.SignJWT({
-    id: (organizationAccount || volunteerAccount)?.id,
-    role: organizationAccount ? 'organization' : 'volunteer',
-    token_version: (organizationAccount || volunteerAccount)?.token_version || 0,
-  }).setIssuedAt()
-    .setProtectedHeader({ alg: 'HS256' })
-    .setExpirationTime('7d')
-    .sign(new TextEncoder().encode(config.JWT_SECRET));
-
-  res.json({
-    token,
-    role: organizationAccount ? 'organization' : 'volunteer',
-    [organizationAccount ? 'organization' : 'volunteer']:
-        organizationAccount ? removePassword(organizationAccount) : removePassword(volunteerAccount!),
-  });
-});
-
-userRouter.post('/forgot-password', async (req, res: Response<UserForgotPasswordResponse>) => {
-  const body = forgotPasswordRequestSchema.parse(req.body);
-
-  const organizationAccount = await database
-    .selectFrom('organization_account')
-    .select(['id', 'name', 'email'])
-    .where('organization_account.email', '=', body.email)
-    .executeTakeFirst();
-
-  let role: 'organization' | 'volunteer' | null = null;
-  let volunteerAccount;
-
-  if (organizationAccount) {
-    role = 'organization';
-  } else {
-    volunteerAccount = await database
-      .selectFrom('volunteer_account')
-      .select(['id', 'first_name', 'last_name', 'email'])
-      .where('volunteer_account.email', '=', body.email)
+    const organizationAccount = await db
+      .selectFrom('organization_account')
+      .select(organizationLoginColumns)
+      .where('organization_account.email', '=', body.email)
       .executeTakeFirst();
 
-    if (volunteerAccount) {
-      role = 'volunteer';
+    let volunteerAccount;
+    if (!organizationAccount) {
+      volunteerAccount = await db
+        .selectFrom('volunteer_account')
+        .select(volunteerLoginColumns)
+        .where('volunteer_account.email', '=', body.email)
+        .executeTakeFirst();
     }
-  }
 
-  res.json({});
+    if (!organizationAccount && !volunteerAccount) {
+      res.status(403);
+      throw new Error('Invalid email or password');
+    }
 
-  if (!organizationAccount && !volunteerAccount) {
-    return;
-  }
+    const valid = organizationAccount
+      ? await compare(body.password, organizationAccount.password)
+      : volunteerAccount
+        ? await compare(body.password, volunteerAccount.password)
+        : false;
 
-  const account = organizationAccount || volunteerAccount;
-  const accountName = organizationAccount ? organizationAccount.name : `${volunteerAccount!.first_name} ${volunteerAccount!.last_name}`;
-  const resetToken = crypto.randomBytes(32).toString('hex');
-  const expiresAt = new Date(Date.now() + 1 * 60 * 60 * 1000); // 1 hour
+    if (!valid) {
+      res.status(403);
+      throw new Error('Invalid email or password');
+    }
 
-  await database
-    .insertInto('password_reset_token')
-    .values({
-      user_id: account!.id,
-      role: role!,
-      token: resetToken,
-      expires_at: expiresAt,
-      created_at: new Date(),
-    })
-    .execute();
+    const account = organizationAccount || volunteerAccount!;
+    const role = organizationAccount ? 'organization' : 'volunteer';
 
-  await sendPasswordResetEmail(body.email, accountName, resetToken);
+    const token = await generateJWT({
+      id: account.id,
+      role,
+      token_version: account.token_version,
+    });
 
-  res.json({});
-});
+    res.json({
+      token,
+      role,
+      [role]: removePassword(account),
+    });
+  });
 
-userRouter.post('/forgot-password/reset', async (req, res: Response<UserForgotPasswordResetResponse>) => {
-  const body = forgotPasswordResetSchema.parse(req.body);
+  userRouter.post('/forgot-password', async (req, res: Response<UserForgotPasswordResponse>) => {
+    const body = forgotPasswordRequestSchema.parse(req.body);
 
-  const resetToken = await database
-    .selectFrom('password_reset_token')
-    .selectAll()
-    .where('password_reset_token.token', '=', body.key)
-    .executeTakeFirst();
+    const organizationAccount = await db
+      .selectFrom('organization_account')
+      .select(['id', 'name', 'email'])
+      .where('organization_account.email', '=', body.email)
+      .executeTakeFirst();
 
-  if (!resetToken) {
-    res.status(400);
-    throw new Error('Invalid or expired reset token');
-  }
+    let role: 'organization' | 'volunteer' | null = null;
+    let volunteerAccount;
 
-  if (new Date() > resetToken.expires_at) {
-    res.status(400);
-    throw new Error('Reset token has expired');
-  }
+    if (organizationAccount) {
+      role = 'organization';
+    } else {
+      volunteerAccount = await db
+        .selectFrom('volunteer_account')
+        .select(['id', 'first_name', 'last_name', 'email'])
+        .where('volunteer_account.email', '=', body.email)
+        .executeTakeFirst();
 
-  const hashedPassword = await bcrypt.hash(body.password, 10);
+      if (volunteerAccount) {
+        role = 'volunteer';
+      }
+    }
 
-  if (resetToken.role === 'organization') {
-    await database
-      .updateTable('organization_account')
-      .where('id', '=', resetToken.user_id)
-      .set({ password: hashedPassword, token_version: sql`token_version + 1` })
+    if (!organizationAccount && !volunteerAccount) {
+      res.json({});
+      return;
+    }
+
+    const account = organizationAccount || volunteerAccount!;
+    const accountName = organizationAccount
+      ? organizationAccount.name
+      : `${volunteerAccount!.first_name} ${volunteerAccount!.last_name}`;
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 1 * 60 * 60 * 1000); // 1 hour
+
+    await db
+      .insertInto('password_reset_token')
+      .values({
+        user_id: account.id,
+        role: role!,
+        token: resetToken,
+        expires_at: expiresAt,
+        created_at: new Date(),
+      })
       .execute();
-  } else if (resetToken.role === 'volunteer') {
-    await database
-      .updateTable('volunteer_account')
-      .where('id', '=', resetToken.user_id)
-      .set({ password: hashedPassword, token_version: sql`token_version + 1` })
+
+    await sendPasswordResetEmail(body.email, accountName, resetToken);
+
+    res.json({});
+  });
+
+  userRouter.post('/forgot-password/reset', async (req, res: Response<UserForgotPasswordResetResponse>) => {
+    const body = forgotPasswordResetSchema.parse(req.body);
+
+    const resetToken = await db
+      .selectFrom('password_reset_token')
+      .selectAll()
+      .where('password_reset_token.token', '=', body.key)
+      .executeTakeFirst();
+
+    if (!resetToken) {
+      res.status(400);
+      throw new Error('Invalid or expired reset token');
+    }
+
+    if (new Date() > resetToken.expires_at) {
+      res.status(400);
+      throw new Error('Reset token has expired');
+    }
+
+    const hashedPassword = await hash(body.password);
+
+    if (resetToken.role === 'organization') {
+      await db
+        .updateTable('organization_account')
+        .where('id', '=', resetToken.user_id)
+        .set({ password: hashedPassword, token_version: sql`token_version + 1` })
+        .execute();
+    } else if (resetToken.role === 'volunteer') {
+      await db
+        .updateTable('volunteer_account')
+        .where('id', '=', resetToken.user_id)
+        .set({ password: hashedPassword, token_version: sql`token_version + 1` })
+        .execute();
+    }
+
+    await db
+      .deleteFrom('password_reset_token')
+      .where('password_reset_token.id', '=', resetToken.id)
       .execute();
-  }
 
-  await database
-    .deleteFrom('password_reset_token')
-    .where('password_reset_token.id', '=', resetToken.id)
-    .execute();
+    res.json({});
+  });
 
-  res.json({});
-});
+  return userRouter;
+}
 
-export default userRouter;
+export default createUserRouter;
