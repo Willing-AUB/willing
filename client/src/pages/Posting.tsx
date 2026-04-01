@@ -1043,6 +1043,50 @@ function PostingPage() {
             </Card>
 
             <Card
+              title="Capacity"
+              description="Number of volunteers still needed"
+              color="secondary"
+              Icon={Users}
+              right={
+                maxVolunteers != null
+                  ? (
+                      <span className={`text-sm font-semibold ${remainingSpots === 0 ? 'text-error' : 'text-success'}`}>
+                        {(remainingSpots ?? 0) > 0
+                          ? `${remainingSpots} spot${remainingSpots === 1 ? '' : 's'} remaining`
+                          : 'No spots remaining'}
+                      </span>
+                    )
+                  : (
+                      <span className="text-sm opacity-70">{`${currentEnrollmentCount} volunteers`}</span>
+                    )
+              }
+            >
+              <div className="space-y-2">
+                {maxVolunteers != null && (
+                  <progress
+                    className="progress progress-secondary w-full"
+                    value={volunteerProgressPercent}
+                    max={100}
+                    aria-label="Volunteer capacity progress"
+                  />
+                )}
+                <p className="text-xs opacity-70">
+                  {maxVolunteers
+                    ? `${currentEnrollmentCount} / ${maxVolunteers} volunteers`
+                    : `${currentEnrollmentCount} volunteers`}
+                </p>
+                {maxVolunteers == null && (
+                  <p className="text-xs opacity-70">No maximum number of volunteers set</p>
+                )}
+                {maxVolunteers != null && overMaxVolunteerCount > 0 && (
+                  <p className="text-xs text-error font-semibold">
+                    {`${overMaxVolunteerCount} volunteer${overMaxVolunteerCount === 1 ? '' : 's'} over max`}
+                  </p>
+                )}
+              </div>
+            </Card>
+
+            <Card
               title={isEditMode ? 'Crisis Tag' : selectedCrisisName || 'Crisis Tag'}
               description={isEditMode ? 'Add a crisis tag to this posting.' : selectedCrisis?.description || 'No crisis description provided.'}
               link={isVolunteerView ? `/volunteer/crises/${selectedCrisisId}/postings` : undefined}
@@ -1122,45 +1166,6 @@ function PostingPage() {
                     ? 'Volunteers are accepted automatically.'
                     : 'Volunteers must be accepted by the organization.'}
               </p>
-            </Card>
-
-            <Card
-              title="Capacity"
-              description="Number of volunteers still needed"
-              color="secondary"
-              Icon={Users}
-            >
-              <div className="space-y-2">
-                {maxVolunteers != null && (
-                  <progress
-                    className="progress progress-secondary w-full"
-                    value={volunteerProgressPercent}
-                    max={100}
-                    aria-label="Volunteer capacity progress"
-                  />
-                )}
-                <p className="text-xs opacity-70">
-                  {maxVolunteers
-                    ? `${currentEnrollmentCount} / ${maxVolunteers} volunteers`
-                    : `${currentEnrollmentCount} volunteers`}
-                </p>
-                {maxVolunteers != null
-                  ? (
-                      <p className={`text-xs ${(remainingSpots ?? 0) === 0 ? 'text-error font-semibold' : 'text-success'}`}>
-                        {(remainingSpots ?? 0) > 0
-                          ? `${remainingSpots} spot${remainingSpots === 1 ? '' : 's'} remaining`
-                          : 'No spots remaining'}
-                      </p>
-                    )
-                  : (
-                      <p className="text-xs opacity-70">No maximum number of volunteers set</p>
-                    )}
-                {maxVolunteers != null && overMaxVolunteerCount > 0 && (
-                  <p className="text-xs text-error font-semibold">
-                    {`${overMaxVolunteerCount} volunteer${overMaxVolunteerCount === 1 ? '' : 's'} over max`}
-                  </p>
-                )}
-              </div>
             </Card>
 
             {!isVolunteerView && (
