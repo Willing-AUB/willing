@@ -334,6 +334,7 @@ describe('POST /volunteer/verify-email', () => {
     expect(generateJWTSpy).toHaveBeenCalledWith({
       id: response.body.volunteer.id,
       role: 'volunteer',
+      token_version: 0,
     });
     expect(recomputeProfileSpy).toHaveBeenCalledWith(response.body.volunteer.id, transaction);
     expect(recomputeExperienceSpy).toHaveBeenCalledWith(response.body.volunteer.id, transaction);
