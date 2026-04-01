@@ -15,7 +15,7 @@ export default async function requestServer<ReturnType>(path: string, { body, me
   };
 
   if (includeJwt) {
-    const token = sessionStorage.getItem('jwt');
+    const token = localStorage.getItem('jwt');
     if (token) {
       headers.append('Authorization', 'Bearer ' + token);
     }
@@ -38,7 +38,6 @@ export default async function requestServer<ReturnType>(path: string, { body, me
   const response = await fetch(url, options);
 
   if (response.headers.get('x-jwt-status') === 'invalid') {
-    sessionStorage.removeItem('jwt');
     localStorage.removeItem('jwt');
   }
 
