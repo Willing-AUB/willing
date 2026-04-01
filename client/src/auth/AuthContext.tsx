@@ -22,23 +22,22 @@ const getCurrentUserAccount = async (currentRole?: Role) => {
     currentRole = decoded.role;
   }
 
-  try {
-    if (currentRole === 'admin') {
-      const response = await requestServer<AdminMeResponse>('/admin/me', { includeJwt: true });
-      return response.admin;
-    }
-    if (currentRole === 'organization') {
-      const response = await requestServer<OrganizationGetMeResponse>('/organization/me', { includeJwt: true });
-      return response.organization;
-    }
-    if (currentRole === 'volunteer') {
-      const response = await requestServer<VolunteerMeResponse>('/volunteer/me', { includeJwt: true });
-      return response.volunteer;
-    }
-  } catch (error) {
-    console.error('Failed to fetch user data:', error);
-    return undefined;
+  if (currentRole === 'admin') {
+    const response = await requestServer<AdminMeResponse>('/admin/me', { includeJwt: true });
+    return response.admin;
   }
+
+  if (currentRole === 'organization') {
+    const response = await requestServer<OrganizationGetMeResponse>('/organization/me', { includeJwt: true });
+    return response.organization;
+  }
+
+  if (currentRole === 'volunteer') {
+    const response = await requestServer<VolunteerMeResponse>('/volunteer/me', { includeJwt: true });
+    return response.volunteer;
+  }
+
+  return undefined;
 };
 
 type AuthContextType = {
@@ -160,30 +159,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [navigate, user]);
 
   const loginAdmin = useCallback(async (email: string, password: string) => {
-    console.log('Attempting admin login with email:', email);
-    const response = await requestServer<AdminLoginResponse>('/admin/login', {
-      method: 'POST',
-      body: { email, password },
-    });
+    try {
+      const response = await requestServer<AdminLoginResponse>('/admin/login', {
+        method: 'POST',
+        body: { email, password },
+      });
 
-    localStorage.setItem(JWT_STORAGE_KEY, response.token);
-    setUser({ role: 'admin', account: response.admin });
-    window.localStorage.setItem(AUTH_EVENT_KEY, `login-admin-${response.admin.id}-${Date.now()}`);
+      localStorage.setItem(JWT_STORAGE_KEY, response.token);
+      setUser({ role: 'admin', account: response.admin });
+      window.localStorage.setItem(AUTH_EVENT_KEY, `login-admin-${response.admin.id}-${Date.now()}`);
+    } catch (error) {
+      localStorage.removeItem(JWT_STORAGE_KEY);
+      throw error;
+    }
   }, []);
 
   const loginUser = useCallback(async (email: string, password: string) => {
-    const response = await requestServer<UserLoginResponse>('/user/login', {
-      method: 'POST',
-      body: { email, password },
-    });
+    try {
+      const response = await requestServer<UserLoginResponse>('/user/login', {
+        method: 'POST',
+        body: { email, password },
+      });
 
-    localStorage.setItem(JWT_STORAGE_KEY, response.token);
-    const account = response.role === 'organization' ? response.organization! : response.volunteer!;
-    setUser({
-      role: response.role,
-      account,
-    });
-    window.localStorage.setItem(AUTH_EVENT_KEY, `login-${response.role}-${account.id}-${Date.now()}`);
+      localStorage.setItem(JWT_STORAGE_KEY, response.token);
+      const account = response.role === 'organization' ? response.organization! : response.volunteer!;
+      setUser({
+        role: response.role,
+        account,
+      });
+      window.localStorage.setItem(AUTH_EVENT_KEY, `login-${response.role}-${account.id}-${Date.now()}`);
+    } catch (error) {
+      localStorage.removeItem(JWT_STORAGE_KEY);
+      throw error;
+    }
   }, []);
 
   const createVolunteer = useCallback(async (volunteer: NewVolunteerAccount) => {
@@ -196,19 +204,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const verifyVolunteerEmail = useCallback(async (key: string) => {
-    const response = await requestServer<VolunteerVerifyEmailResponse>('/volunteer/verify-email', {
-      method: 'POST',
-      body: { key },
-    });
+    try {
+      const response = await requestServer<VolunteerVerifyEmailResponse>('/volunteer/verify-email', {
+        method: 'POST',
+        body: { key },
+      });
 
-    localStorage.setItem(JWT_STORAGE_KEY, response.token);
-    setUser({
-      role: 'volunteer',
-      account: response.volunteer,
-    });
-    window.localStorage.setItem(AUTH_EVENT_KEY, `login-volunteer-${response.volunteer.id}-${Date.now()}`);
+      localStorage.setItem(JWT_STORAGE_KEY, response.token);
+      setUser({
+        role: 'volunteer',
+        account: response.volunteer,
+      });
+      window.localStorage.setItem(AUTH_EVENT_KEY, `login-volunteer-${response.volunteer.id}-${Date.now()}`);
 
-    return response;
+      return response;
+    } catch (error) {
+      localStorage.removeItem(JWT_STORAGE_KEY);
+      throw error;
+    }
   }, []);
 
   const resendVolunteerVerification = useCallback(async (email: string) => {
@@ -237,7 +250,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem(JWT_STORAGE_KEY, token);
     window.localStorage.setItem(AUTH_EVENT_KEY, 'signout-others-' + Date.now());
     await refreshUser(token);
-  }, [user, navigate, refreshUser]);
+  }, [user, refreshUser]);
 
   const logout = useCallback(() => {
     localStorage.removeItem(JWT_STORAGE_KEY);
