@@ -13,7 +13,7 @@ import type { Kysely } from 'kysely';
 
 function createAPIRouter(db: Kysely<Database>) {
   const api = Router();
-  api.use(setUserJWT(db));
+  api.use(setUserJWT);
 
   api.use('/user', createUserRouter(db));
   api.use('/public', createPublicRouter(db));
