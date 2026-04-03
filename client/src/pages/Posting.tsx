@@ -174,6 +174,7 @@ function PostingPage() {
   const [processingApplicationId, setProcessingApplicationId] = useState<number | null>(null);
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
   const [selectedApplicationDates, setSelectedApplicationDates] = useState<string[]>([]);
+  const [selectedVolunteerDates, setSelectedVolunteerDates] = useState<string[]>([]);
   const [postingDates, setPostingDates] = useState<string[]>([]);
   const [isEditMode, setIsEditMode] = useState(false);
   const [postingEnrollmentCount, setPostingEnrollmentCount] = useState(0);
@@ -299,6 +300,7 @@ function PostingPage() {
       setIsEnrolled(postingResponse.posting.application_status === 'registered');
       setPostingEnrollmentCount(postingResponse.posting.enrollment_count);
       setPostingDates(normalizeDateOnlyList(postingResponse.posting_dates ?? []));
+      setSelectedVolunteerDates(normalizeDateOnlyList(postingResponse.selected_dates ?? []));
       setSkills(postingResponse.posting.skills.map(s => s.name));
       setSelectedCrisisId(postingResponse.posting.crisis_id ?? undefined);
       setPosition([
@@ -368,6 +370,7 @@ function PostingPage() {
 
     setIsEnrolled(false);
     setHasPendingApplication(false);
+    setSelectedVolunteerDates([]);
     setSkills(postingResponse.skills.map(s => s.name));
     setSelectedCrisisId(postingResponse.posting.crisis_id ?? undefined);
     setPosition([
@@ -742,6 +745,17 @@ function PostingPage() {
       badgeClassName: 'badge-ghost',
     };
   }, [hasPendingApplication, isEnrolled]);
+
+  const formattedSelectedDates = useMemo(() => (
+    (selectedVolunteerDates ?? []).map(date => formatDisplayDate(date))
+  ), [selectedVolunteerDates]);
+
+  const applicationDaysLabel = useMemo(() => {
+    if (!posting || (!isEnrolled && !hasPendingApplication)) return null;
+    if (!posting.allows_partial_attendance) return 'All days';
+    if (formattedSelectedDates.length === 0) return null;
+    return formattedSelectedDates.join(', ');
+  }, [formattedSelectedDates, hasPendingApplication, isEnrolled, posting]);
 
   const canOpenAttendancePage = useMemo(() => {
     if (isVolunteerView || !posting) return false;
@@ -1244,10 +1258,16 @@ function PostingPage() {
                     </>
                   )
                 : (
-                    <span className={`badge gap-2 ${posting?.is_closed ? 'badge-error' : isOpen ? 'badge-primary' : 'badge-secondary'}`}>
-                      {posting?.is_closed ? <Lock size={12} /> : isOpen ? <LockOpen size={12} /> : <Lock size={12} />}
-                      {posting?.is_closed ? 'Closed' : isPostingFull ? 'Full' : isOpen ? 'Open' : 'Review Based'}
-                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      <span className={`badge gap-2 ${posting?.is_closed ? 'badge-error' : isOpen ? 'badge-primary' : 'badge-secondary'}`}>
+                        {posting?.is_closed ? <Lock size={12} /> : isOpen ? <LockOpen size={12} /> : <Lock size={12} />}
+                        {posting?.is_closed ? 'Closed' : isPostingFull ? 'Full' : isOpen ? 'Open' : 'Review Based'}
+                      </span>
+                      <span className={`badge gap-2 ${posting?.allows_partial_attendance ? 'badge-info' : 'badge-accent'}`}>
+                        {posting?.allows_partial_attendance ? <Calendar size={12} /> : <Users size={12} />}
+                        {posting?.allows_partial_attendance ? 'Partial Attendance' : 'Full Commitment'}
+                      </span>
+                    </div>
                   )}
               <p className="text-xs opacity-70 mt-2">
                 {posting?.is_closed
@@ -1256,6 +1276,13 @@ function PostingPage() {
                     ? 'Volunteers are accepted automatically.'
                     : 'Volunteers must be accepted by the organization.'}
               </p>
+              {!isEditMode && !isVolunteerView && (
+                <p className="text-xs opacity-70 mt-1">
+                  {posting?.allows_partial_attendance
+                    ? 'This posting allows volunteers to apply for selected dates only.'
+                    : 'This posting requires volunteers to commit to the full posting date range.'}
+                </p>
+              )}
             </Card>
 
             {!isVolunteerView && (
@@ -1274,15 +1301,13 @@ function PostingPage() {
           </>
         )}
       >
-        {isVolunteerView && (
-          <Card
-            title={posting?.allows_partial_attendance ? 'Partial attendance' : 'Full commitment'}
-            description={posting?.allows_partial_attendance
-              ? 'Choose specific days to apply to and attend, you do not have to attend all days'
-              : 'You must attend all days when you apply'}
-            Icon={Calendar}
-          />
-        )}
+        <Card
+          title={posting?.allows_partial_attendance ? 'Partial attendance' : 'Full commitment'}
+          description={posting?.allows_partial_attendance
+            ? 'Volunteers can choose specific days instead of committing to the full posting range.'
+            : 'Volunteers must commit to the full posting date range when they apply.'}
+          Icon={Calendar}
+        />
 
         {isVolunteerView && (
           <Card
@@ -1296,6 +1321,12 @@ function PostingPage() {
             <p className="text-sm opacity-70 mt-2">
               {applicationStatus.description}
             </p>
+            {applicationDaysLabel && (
+              <div className="mt-3">
+                <p className="text-xs font-medium uppercase tracking-wide opacity-60">Applied Days</p>
+                <p className="text-sm mt-1">{applicationDaysLabel}</p>
+              </div>
+            )}
 
             <div className="mt-3 flex justify-end">
               {isEnrolled
