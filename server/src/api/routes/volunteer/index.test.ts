@@ -702,6 +702,197 @@ describe('GET /volunteer/certificate', () => {
   });
 });
 
+describe('DELETE /volunteer/posting/:id/enroll withdrawal behavior', () => {
+  test('removes the entire enrollment for partial attendance postings', async () => {
+    const { token } = await createVolunteerAccount({ email: 'partial-withdraw@example.com' });
+    const { organization } = await createOrganizationAccount({ email: 'partial-withdraw-org@example.com' });
+
+    const posting = await transaction
+      .insertInto('organization_posting')
+      .values({
+        organization_id: organization.id,
+        title: 'Partial Attendance Event',
+        description: 'Test partial withdraw behavior',
+        latitude: 33.9,
+        longitude: 35.5,
+        max_volunteers: 20,
+        start_date: new Date('2026-04-05T00:00:00.000Z'),
+        start_time: '09:00:00',
+        end_date: new Date('2026-04-11T00:00:00.000Z'),
+        end_time: '17:00:00',
+        minimum_age: 18,
+        automatic_acceptance: true,
+        is_closed: false,
+        allows_partial_attendance: true,
+        location_name: 'Test Location',
+        crisis_id: undefined,
+        created_at: new Date('2026-03-01T00:00:00.000Z'),
+        updated_at: new Date('2026-03-01T00:00:00.000Z'),
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow();
+
+    const enrollResponse = await server
+      .post(`/volunteer/posting/${posting.id}/enroll`)
+      .set('Authorization', 'Bearer ' + token)
+      .send({ dates: ['2026-04-05', '2026-04-07', '2026-04-09'], message: 'Enroll for selected partial dates' })
+      .expect(200);
+
+    expect(enrollResponse.body.enrollment).toBeDefined();
+
+    const withdrawResponse = await server
+      .delete(`/volunteer/posting/${posting.id}/enroll`)
+      .set('Authorization', 'Bearer ' + token)
+      .send({ message: 'Withdraw the whole application' })
+      .expect(200);
+
+    expect(withdrawResponse.body).toEqual({});
+
+    const remainingDates = await transaction
+      .selectFrom('enrollment_date')
+      .select('date')
+      .where('enrollment_id', '=', enrollResponse.body.enrollment.id)
+      .execute();
+
+    expect(remainingDates).toEqual([]);
+  });
+
+  test('removes the entire pending application for partial attendance postings', async () => {
+    const { token } = await createVolunteerAccount({ email: 'partial-pending-withdraw@example.com' });
+    const { organization } = await createOrganizationAccount({ email: 'partial-pending-withdraw-org@example.com' });
+
+    const posting = await transaction
+      .insertInto('organization_posting')
+      .values({
+        organization_id: organization.id,
+        title: 'Partial Pending Withdrawal Event',
+        description: 'Test full pending withdrawal behavior',
+        latitude: 33.9,
+        longitude: 35.5,
+        max_volunteers: 20,
+        start_date: new Date('2026-05-01T00:00:00.000Z'),
+        start_time: '09:00:00',
+        end_date: new Date('2026-05-03T00:00:00.000Z'),
+        end_time: '17:00:00',
+        minimum_age: 18,
+        automatic_acceptance: false,
+        is_closed: false,
+        allows_partial_attendance: true,
+        location_name: 'Test Location',
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow();
+
+    const applyResponse = await server
+      .post(`/volunteer/posting/${posting.id}/enroll`)
+      .set('Authorization', 'Bearer ' + token)
+      .send({ dates: ['2026-05-01', '2026-05-03'], message: 'Applying for selected days' })
+      .expect(200);
+
+    expect(applyResponse.body.enrollment).toBeDefined();
+
+    await server
+      .delete(`/volunteer/posting/${posting.id}/enroll`)
+      .set('Authorization', 'Bearer ' + token)
+      .expect(200, {});
+
+    const remainingApplication = await transaction
+      .selectFrom('enrollment_application')
+      .select('id')
+      .where('posting_id', '=', posting.id)
+      .executeTakeFirst();
+
+    const remainingApplicationDates = await transaction
+      .selectFrom('enrollment_application_date')
+      .select('id')
+      .execute();
+
+    expect(remainingApplication).toBeUndefined();
+    expect(remainingApplicationDates).toEqual([]);
+  });
+});
+
+describe('GET /volunteer/posting/:id selected partial dates', () => {
+  test('returns requested application dates for a pending partial application', async () => {
+    const { token } = await createVolunteerAccount({ email: 'partial-pending-selected@example.com' });
+    const { organization } = await createOrganizationAccount({ email: 'partial-pending-selected-org@example.com' });
+
+    const posting = await transaction
+      .insertInto('organization_posting')
+      .values({
+        organization_id: organization.id,
+        title: 'Pending Partial Attendance Event',
+        description: 'Pending partial attendance application',
+        latitude: 33.9,
+        longitude: 35.5,
+        max_volunteers: 20,
+        start_date: new Date('2026-05-10T00:00:00.000Z'),
+        start_time: '09:00:00',
+        end_date: new Date('2026-05-12T00:00:00.000Z'),
+        end_time: '17:00:00',
+        minimum_age: 18,
+        automatic_acceptance: false,
+        is_closed: false,
+        allows_partial_attendance: true,
+        location_name: 'Test Location',
+        crisis_id: undefined,
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow();
+
+    await server
+      .post(`/volunteer/posting/${posting.id}/enroll`)
+      .set('Authorization', 'Bearer ' + token)
+      .send({ dates: ['2026-05-10', '2026-05-12'], message: 'Only available on selected days' })
+      .expect(200);
+
+    const response = await server
+      .get(`/volunteer/posting/${posting.id}`)
+      .set('Authorization', 'Bearer ' + token)
+      .expect(200);
+
+    expect(response.body.posting.application_status).toBe('pending');
+    expect(response.body.enrolled_dates).toEqual([]);
+    expect(response.body.selected_dates).toEqual(['2026-05-10', '2026-05-12']);
+  });
+
+  test('returns posting_dates including the end date', async () => {
+    const { token } = await createVolunteerAccount({ email: 'partial-posting-dates@example.com' });
+    const { organization } = await createOrganizationAccount({ email: 'partial-posting-dates-org@example.com' });
+
+    const posting = await transaction
+      .insertInto('organization_posting')
+      .values({
+        organization_id: organization.id,
+        title: 'Inclusive Posting Dates Event',
+        description: 'Posting dates should include the final day',
+        latitude: 33.9,
+        longitude: 35.5,
+        max_volunteers: 20,
+        start_date: new Date('2026-04-01T00:00:00.000Z'),
+        start_time: '09:00:00',
+        end_date: new Date('2026-04-29T00:00:00.000Z'),
+        end_time: '17:00:00',
+        minimum_age: 18,
+        automatic_acceptance: false,
+        is_closed: false,
+        allows_partial_attendance: true,
+        location_name: 'Test Location',
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow();
+
+    const response = await server
+      .get(`/volunteer/posting/${posting.id}`)
+      .set('Authorization', 'Bearer ' + token)
+      .expect(200);
+
+    expect(response.body.posting_dates[0]).toBe('2026-04-01');
+    expect(response.body.posting_dates.at(-1)).toBe('2026-04-29');
+    expect(response.body.posting_dates).toHaveLength(29);
+  });
+});
+
 describe('GET /volunteer/crises/pinned', () => {
   test('returns pinned crises ordered by creation time', async () => {
     const { token } = await createVolunteerAccount({ email: 'crisis-pinned@example.com' });
@@ -1132,6 +1323,70 @@ describe('GET /volunteer/organizations', () => {
         posting_count: 1,
       },
     ]);
+  });
+
+  test('filters organizations by certificate enabled or disabled', async () => {
+    const { token } = await createVolunteerAccount({ email: 'org-search-cert@example.com' });
+    const { organization: enabledOrg } = await createOrganizationAccount({
+      email: 'enabled-org@example.com',
+      name: 'Enabled Org',
+      phone_number: '111-222-3333',
+      url: 'https://enabled.example.org',
+    });
+    const { organization: disabledOrg } = await createOrganizationAccount({
+      email: 'disabled-org@example.com',
+      name: 'Disabled Org',
+      phone_number: '222-333-4444',
+      url: 'https://disabled.example.org',
+    });
+    const { organization: _noInfoOrg } = await createOrganizationAccount({
+      email: 'no-info-org@example.com',
+      name: 'NoInfo Org',
+      phone_number: '333-444-5555',
+      url: 'https://no-info.example.org',
+    });
+
+    const enabledCertInfo = await transaction
+      .insertInto('organization_certificate_info')
+      .values({ certificate_feature_enabled: true, hours_threshold: null, signatory_name: null, signatory_position: null, signature_path: null })
+      .returningAll()
+      .executeTakeFirstOrThrow();
+
+    const disabledCertInfo = await transaction
+      .insertInto('organization_certificate_info')
+      .values({ certificate_feature_enabled: false, hours_threshold: null, signatory_name: null, signatory_position: null, signature_path: null })
+      .returningAll()
+      .executeTakeFirstOrThrow();
+
+    await transaction
+      .updateTable('organization_account')
+      .set({ certificate_info_id: enabledCertInfo.id })
+      .where('id', '=', enabledOrg.id)
+      .execute();
+
+    await transaction
+      .updateTable('organization_account')
+      .set({ certificate_info_id: disabledCertInfo.id })
+      .where('id', '=', disabledOrg.id)
+      .execute();
+
+    const enabledResponse = await server
+      .get('/volunteer/organizations?certificate_enabled=enabled')
+      .set('Authorization', 'Bearer ' + token)
+      .expect(200);
+    expect(enabledResponse.body.organizations.map((o: { name: string }) => o.name)).toEqual(['Enabled Org']);
+
+    const disabledResponse = await server
+      .get('/volunteer/organizations?certificate_enabled=disabled')
+      .set('Authorization', 'Bearer ' + token)
+      .expect(200);
+    expect(disabledResponse.body.organizations.map((o: { name: string }) => o.name).sort()).toEqual(['Disabled Org', 'NoInfo Org']);
+
+    const allResponse = await server
+      .get('/volunteer/organizations?certificate_enabled=all')
+      .set('Authorization', 'Bearer ' + token)
+      .expect(200);
+    expect(allResponse.body.organizations.map((o: { name: string }) => o.name).sort()).toEqual(['Disabled Org', 'Enabled Org', 'NoInfo Org']);
   });
 
   test('applies search across organization fields', async () => {
