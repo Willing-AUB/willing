@@ -25,8 +25,8 @@ afterEach(async () => {
 
 describe('Organization posting applications', () => {
   test('returns requested_dates for partial attendance applications', async () => {
-    const { organization, token } = await createOrganizationAccount({ email: 'org-posting-apps@example.com' });
-    const { volunteer } = await createVolunteerAccount({ email: 'vol-posting-apps@example.com' });
+    const { organization, token } = await createOrganizationAccount(transaction, { email: 'org-posting-apps@example.com' });
+    const { volunteer } = await createVolunteerAccount(transaction, { email: 'vol-posting-apps@example.com' });
 
     const posting = await transaction
       .insertInto('organization_posting')
@@ -82,8 +82,8 @@ describe('Organization posting applications', () => {
   });
 
   test('accepting a review-based partial application creates enrollment_date rows', async () => {
-    const { organization, token } = await createOrganizationAccount({ email: 'org-posting-accept@example.com' });
-    const { volunteer } = await createVolunteerAccount({ email: 'vol-posting-accept@example.com' });
+    const { organization, token } = await createOrganizationAccount(transaction, { email: 'org-posting-accept@example.com' });
+    const { volunteer } = await createVolunteerAccount(transaction, { email: 'vol-posting-accept@example.com' });
 
     const posting = await transaction
       .insertInto('organization_posting')

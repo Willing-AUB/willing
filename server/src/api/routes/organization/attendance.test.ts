@@ -24,10 +24,10 @@ afterEach(async () => {
 
 describe('Organization attendance endpoints', () => {
   test('returns posting date range and allows per-date updates', async () => {
-    const org = await createOrganizationAccount({ email: 'org-a@example.com' });
-    const volunteer = await createVolunteerAccount({ email: 'vol-a@example.com' });
+    const org = await createOrganizationAccount(transaction, { email: 'org-a@example.com' });
+    const volunteer = await createVolunteerAccount(transaction, { email: 'vol-a@example.com' });
 
-    const posting = await createOrganizationPosting({
+    const posting = await createOrganizationPosting(transaction, {
       organizationId: org.organization.id,
       overrides: {
         allows_partial_attendance: true,
