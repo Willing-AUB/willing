@@ -704,8 +704,8 @@ describe('GET /volunteer/certificate', () => {
 
 describe('DELETE /volunteer/posting/:id/enroll withdrawal behavior', () => {
   test('removes the entire enrollment for partial attendance postings', async () => {
-    const { token } = await createVolunteerAccount({ email: 'partial-withdraw@example.com' });
-    const { organization } = await createOrganizationAccount({ email: 'partial-withdraw-org@example.com' });
+    const { token } = await createVolunteerAccount(transaction, { email: 'partial-withdraw@example.com' });
+    const { organization } = await createOrganizationAccount(transaction, { email: 'partial-withdraw-org@example.com' });
 
     const posting = await transaction
       .insertInto('organization_posting')
@@ -758,8 +758,8 @@ describe('DELETE /volunteer/posting/:id/enroll withdrawal behavior', () => {
   });
 
   test('removes the entire pending application for partial attendance postings', async () => {
-    const { token } = await createVolunteerAccount({ email: 'partial-pending-withdraw@example.com' });
-    const { organization } = await createOrganizationAccount({ email: 'partial-pending-withdraw-org@example.com' });
+    const { token } = await createVolunteerAccount(transaction, { email: 'partial-pending-withdraw@example.com' });
+    const { organization } = await createOrganizationAccount(transaction, { email: 'partial-pending-withdraw-org@example.com' });
 
     const posting = await transaction
       .insertInto('organization_posting')
@@ -814,8 +814,8 @@ describe('DELETE /volunteer/posting/:id/enroll withdrawal behavior', () => {
 
 describe('GET /volunteer/posting/:id selected partial dates', () => {
   test('returns requested application dates for a pending partial application', async () => {
-    const { token } = await createVolunteerAccount({ email: 'partial-pending-selected@example.com' });
-    const { organization } = await createOrganizationAccount({ email: 'partial-pending-selected-org@example.com' });
+    const { token } = await createVolunteerAccount(transaction, { email: 'partial-pending-selected@example.com' });
+    const { organization } = await createOrganizationAccount(transaction, { email: 'partial-pending-selected-org@example.com' });
 
     const posting = await transaction
       .insertInto('organization_posting')
@@ -857,8 +857,8 @@ describe('GET /volunteer/posting/:id selected partial dates', () => {
   });
 
   test('returns posting_dates including the end date', async () => {
-    const { token } = await createVolunteerAccount({ email: 'partial-posting-dates@example.com' });
-    const { organization } = await createOrganizationAccount({ email: 'partial-posting-dates-org@example.com' });
+    const { token } = await createVolunteerAccount(transaction, { email: 'partial-posting-dates@example.com' });
+    const { organization } = await createOrganizationAccount(transaction, { email: 'partial-posting-dates-org@example.com' });
 
     const posting = await transaction
       .insertInto('organization_posting')
@@ -1326,20 +1326,20 @@ describe('GET /volunteer/organizations', () => {
   });
 
   test('filters organizations by certificate enabled or disabled', async () => {
-    const { token } = await createVolunteerAccount({ email: 'org-search-cert@example.com' });
-    const { organization: enabledOrg } = await createOrganizationAccount({
+    const { token } = await createVolunteerAccount(transaction, { email: 'org-search-cert@example.com' });
+    const { organization: enabledOrg } = await createOrganizationAccount(transaction, {
       email: 'enabled-org@example.com',
       name: 'Enabled Org',
       phone_number: '111-222-3333',
       url: 'https://enabled.example.org',
     });
-    const { organization: disabledOrg } = await createOrganizationAccount({
+    const { organization: disabledOrg } = await createOrganizationAccount(transaction, {
       email: 'disabled-org@example.com',
       name: 'Disabled Org',
       phone_number: '222-333-4444',
       url: 'https://disabled.example.org',
     });
-    const { organization: _noInfoOrg } = await createOrganizationAccount({
+    const { organization: _noInfoOrg } = await createOrganizationAccount(transaction, {
       email: 'no-info-org@example.com',
       name: 'NoInfo Org',
       phone_number: '333-444-5555',
