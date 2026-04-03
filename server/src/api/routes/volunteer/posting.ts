@@ -3,7 +3,7 @@ import { sql, type Kysely } from 'kysely';
 import zod from 'zod';
 
 import { type VolunteerEnrollmentsResponse, type VolunteerPostingEnrollResponse, type VolunteerPostingResponse, type VolunteerPostingSearchResponse, type VolunteerPostingWithdrawResponse } from './posting.types.ts';
-import { buildPostingsWithContext, postingWithContextSelectColumns } from './postingWithContext.ts';
+import { buildPostingsWithContext, isVolunteerPostingFull, postingWithContextSelectColumns } from './postingWithContext.ts';
 import authorizeOnly from '../../../auth/authorizeOnly.ts';
 import executeTransaction from '../../../db/executeTransaction.ts';
 import { type Database, type Enrollment, type EnrollmentApplication } from '../../../db/tables/index.ts';
@@ -296,7 +296,7 @@ function createVolunteerPostingRouter(db: Kysely<Database>) {
     });
 
     const visiblePostings = hideFull
-      ? postingsWithContext.filter(posting => posting.max_volunteers == null || posting.enrollment_count < (posting.max_volunteers ?? Infinity))
+      ? postingsWithContext.filter(posting => !isVolunteerPostingFull(posting))
       : postingsWithContext;
 
     res.json({ postings: visiblePostings });
@@ -352,7 +352,7 @@ function createVolunteerPostingRouter(db: Kysely<Database>) {
     const filteredPostings = postings
       .filter(posting => matchesPostingSearch(posting, search))
       .filter(posting => matchesPostingDateTimeFilters<PostingWithContext>(posting, dateTimeFilters))
-      .filter(posting => (hideFull ? posting.max_volunteers == null || posting.enrollment_count < (posting.max_volunteers ?? Infinity) : true));
+      .filter(posting => (hideFull ? !isVolunteerPostingFull(posting) : true));
 
     const effectiveSortBy = sortBy === 'recommended' ? 'start_date' : sortBy;
     const effectiveSortDir = sortDir;

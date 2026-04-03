@@ -757,6 +757,15 @@ function PostingPage() {
     return formattedSelectedDates.join(', ');
   }, [formattedSelectedDates, hasPendingApplication, isEnrolled, posting]);
 
+  const shouldShowCommitmentCard = useMemo(() => {
+    if (!posting) return false;
+    return startDate !== endDate;
+  }, [endDate, posting, startDate]);
+
+  const isMultiDayPartialPosting = useMemo(() => (
+    Boolean(posting?.allows_partial_attendance) && shouldShowCommitmentCard
+  ), [posting?.allows_partial_attendance, shouldShowCommitmentCard]);
+
   const fullPostingDates = useMemo(() => {
     if (!posting?.allows_partial_attendance) return [];
     if (posting.max_volunteers == null) return [];
@@ -780,11 +789,6 @@ function PostingPage() {
   const overMaxVolunteerCount = useMemo(() => {
     if (!maxVolunteers) return 0;
     return Math.max(0, currentEnrollmentCount - maxVolunteers);
-  }, [currentEnrollmentCount, maxVolunteers]);
-
-  const isPostingFull = useMemo(() => {
-    if (!maxVolunteers) return false;
-    return currentEnrollmentCount >= maxVolunteers;
   }, [currentEnrollmentCount, maxVolunteers]);
 
   const volunteerProgressPercent = useMemo(() => {
@@ -1126,49 +1130,51 @@ function PostingPage() {
                   )}
             </Card>
 
-            <Card
-              title="Capacity"
-              description="Number of volunteers still needed"
-              color="secondary"
-              Icon={Users}
-              right={
-                maxVolunteers != null
-                  ? (
-                      <span className={`text-sm font-semibold ${remainingSpots === 0 ? 'text-error' : 'text-success'}`}>
-                        {(remainingSpots ?? 0) > 0
-                          ? `${remainingSpots} spot${remainingSpots === 1 ? '' : 's'} remaining`
-                          : 'No spots remaining'}
-                      </span>
-                    )
-                  : (
-                      <span className="text-sm opacity-70">{`${currentEnrollmentCount} volunteers`}</span>
-                    )
-              }
-            >
-              <div className="space-y-2">
-                {maxVolunteers != null && (
-                  <progress
-                    className="progress progress-secondary w-full"
-                    value={volunteerProgressPercent}
-                    max={100}
-                    aria-label="Volunteer capacity progress"
-                  />
-                )}
-                <p className="text-xs opacity-70">
-                  {maxVolunteers
-                    ? `${currentEnrollmentCount} / ${maxVolunteers} volunteers`
-                    : `${currentEnrollmentCount} volunteers`}
-                </p>
-                {maxVolunteers == null && (
-                  <p className="text-xs opacity-70">No maximum number of volunteers set</p>
-                )}
-                {maxVolunteers != null && overMaxVolunteerCount > 0 && (
-                  <p className="text-xs text-error font-semibold">
-                    {`${overMaxVolunteerCount} volunteer${overMaxVolunteerCount === 1 ? '' : 's'} over max`}
+            {!isMultiDayPartialPosting && (
+              <Card
+                title="Capacity"
+                description="Number of volunteers still needed"
+                color="secondary"
+                Icon={Users}
+                right={
+                  maxVolunteers != null
+                    ? (
+                        <span className={`text-sm font-semibold ${remainingSpots === 0 ? 'text-error' : 'text-success'}`}>
+                          {(remainingSpots ?? 0) > 0
+                            ? `${remainingSpots} spot${remainingSpots === 1 ? '' : 's'} remaining`
+                            : 'No spots remaining'}
+                        </span>
+                      )
+                    : (
+                        <span className="text-sm opacity-70">{`${currentEnrollmentCount} volunteers`}</span>
+                      )
+                }
+              >
+                <div className="space-y-2">
+                  {maxVolunteers != null && (
+                    <progress
+                      className="progress progress-secondary w-full"
+                      value={volunteerProgressPercent}
+                      max={100}
+                      aria-label="Volunteer capacity progress"
+                    />
+                  )}
+                  <p className="text-xs opacity-70">
+                    {maxVolunteers
+                      ? `${currentEnrollmentCount} / ${maxVolunteers} volunteers`
+                      : `${currentEnrollmentCount} volunteers`}
                   </p>
-                )}
-              </div>
-            </Card>
+                  {maxVolunteers == null && (
+                    <p className="text-xs opacity-70">No maximum number of volunteers set</p>
+                  )}
+                  {maxVolunteers != null && overMaxVolunteerCount > 0 && (
+                    <p className="text-xs text-error font-semibold">
+                      {`${overMaxVolunteerCount} volunteer${overMaxVolunteerCount === 1 ? '' : 's'} over max`}
+                    </p>
+                  )}
+                </div>
+              </Card>
+            )}
 
             <Card
               title={isEditMode ? 'Crisis Tag' : selectedCrisisName || 'No Crisis'}
@@ -1242,34 +1248,12 @@ function PostingPage() {
                         ]}
                       />
 
-                      <ToggleButton
-                        form={form}
-                        name="allows_partial_attendance"
-                        label="Attendance Commitment"
-                        disabled={saving || !!posting}
-                        options={[
-                          {
-                            value: true,
-                            label: 'Partial Attendance',
-                            description: 'Volunteers can choose specific days.',
-                            Icon: Calendar,
-                            btnColor: 'btn-info',
-                          },
-                          {
-                            value: false,
-                            label: 'Full Commitment',
-                            description: 'Volunteers must attend all dates.',
-                            Icon: Users,
-                            btnColor: 'btn-accent',
-                          },
-                        ]}
-                      />
                     </>
                   )
                 : (
                     <span className={`badge gap-2 ${posting?.is_closed ? 'badge-error' : isOpen ? 'badge-primary' : 'badge-secondary'}`}>
                       {posting?.is_closed ? <Lock size={12} /> : isOpen ? <LockOpen size={12} /> : <Lock size={12} />}
-                      {posting?.is_closed ? 'Closed' : isPostingFull ? 'Full' : isOpen ? 'Open' : 'Review Based'}
+                      {posting?.is_closed ? 'Closed' : isOpen ? 'Open' : 'Review Based'}
                     </span>
                   )}
               <p className="text-xs opacity-70 mt-2">
@@ -1280,11 +1264,7 @@ function PostingPage() {
                     : 'Volunteers must be accepted by the organization.'}
               </p>
               {!isEditMode && !isVolunteerView && (
-                <p className="text-xs opacity-70 mt-1">
-                  {posting?.allows_partial_attendance
-                    ? 'This posting allows volunteers to apply for selected dates only.'
-                    : 'This posting requires volunteers to commit to the full posting date range.'}
-                </p>
+                null
               )}
             </Card>
 
@@ -1304,13 +1284,15 @@ function PostingPage() {
           </>
         )}
       >
-        <Card
-          title={posting?.allows_partial_attendance ? 'Partial attendance' : 'Full commitment'}
-          description={posting?.allows_partial_attendance
-            ? 'Volunteers can choose specific days instead of committing to the full posting range.'
-            : 'Volunteers must commit to the full posting date range when they apply.'}
-          Icon={Calendar}
-        />
+        {shouldShowCommitmentCard && (
+          <Card
+            title={posting?.allows_partial_attendance ? 'Partial attendance' : 'Full commitment'}
+            description={posting?.allows_partial_attendance
+              ? 'Volunteers can choose specific days instead of committing to the full posting range.'
+              : 'Volunteers must commit to the full posting date range when they apply.'}
+            Icon={Calendar}
+          />
+        )}
 
         {isVolunteerView && (
           <Card
