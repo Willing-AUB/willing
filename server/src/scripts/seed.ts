@@ -793,6 +793,51 @@ async function seed() {
         is_closed: false,
       },
       {
+        organization_id: orgByName.get('Cedar Response')!,
+        crisis_id: crisisByName.get('Beirut Port Explosion Aftermath')!,
+        title: 'One-Day Hotline Sprint',
+        description: 'Support the hotline team for a single high-volume day by answering calls, escalating urgent cases, and updating referral notes.',
+        latitude: 33.8940,
+        longitude: 35.5132,
+        location_name: 'Cedar Response Office, Gemmayze',
+        max_volunteers: 6,
+        ...buildTemporalFields(`${nowYear}-03-25T09:00:00Z`, `${nowYear}-03-25T17:00:00Z`),
+        minimum_age: 18,
+        automatic_acceptance: true,
+        allows_partial_attendance: true,
+        is_closed: false,
+      },
+      {
+        organization_id: orgByName.get('Bekaa Uplift')!,
+        crisis_id: crisisByName.get('Bekaa Valley Flooding')!,
+        title: 'Farm Recovery Rotation',
+        description: 'Help farm families recover across a three-day rotation of cleanup, seed sorting, and irrigation setup support in flood-affected areas.',
+        latitude: 33.8525,
+        longitude: 35.9150,
+        location_name: 'Bekaa Farm Support Hub',
+        max_volunteers: 2,
+        ...buildTemporalFields(`${nowYear}-03-28T08:00:00Z`, `${nowYear}-03-30T15:00:00Z`),
+        minimum_age: 18,
+        automatic_acceptance: true,
+        allows_partial_attendance: true,
+        is_closed: false,
+      },
+      {
+        organization_id: orgByName.get('Cedar Response')!,
+        crisis_id: crisisByName.get('Beirut Port Explosion Aftermath')!,
+        title: 'Crisis Hotline Coverage Week',
+        description: 'Cover every hotline shift for a three-day support push. Volunteers handle caller triage, documentation, and referral follow-ups.',
+        latitude: 33.8950,
+        longitude: 35.5144,
+        location_name: 'Cedar Response Coordination Room',
+        max_volunteers: 2,
+        ...buildTemporalFields(`${nowYear}-04-05T09:00:00Z`, `${nowYear}-04-07T17:00:00Z`),
+        minimum_age: 18,
+        automatic_acceptance: true,
+        allows_partial_attendance: true,
+        is_closed: false,
+      },
+      {
         organization_id: orgByName.get('Arz Community')!,
         crisis_id: crisisByName.get('Tyre Coastal Pollution')!,
         title: 'Coastal Cleanup',
@@ -955,11 +1000,23 @@ async function seed() {
     { posting_id: postingByTitle.get('Volunteer Helpline Shifts')!, name: 'Remote Support' },
     { posting_id: postingByTitle.get('Volunteer Helpline Shifts')!, name: 'Data Entry' },
 
+    // One-Day Hotline Sprint
+    { posting_id: postingByTitle.get('One-Day Hotline Sprint')!, name: 'Communication' },
+    { posting_id: postingByTitle.get('One-Day Hotline Sprint')!, name: 'Active Listening' },
+    { posting_id: postingByTitle.get('One-Day Hotline Sprint')!, name: 'Data Entry' },
+    { posting_id: postingByTitle.get('One-Day Hotline Sprint')!, name: 'Calm Under Pressure' },
+
     // Neighborhood Repair Week
     { posting_id: postingByTitle.get('Neighborhood Repair Week')!, name: 'Teamwork' },
     { posting_id: postingByTitle.get('Neighborhood Repair Week')!, name: 'Physical Stamina' },
     { posting_id: postingByTitle.get('Neighborhood Repair Week')!, name: 'Painting' },
     { posting_id: postingByTitle.get('Neighborhood Repair Week')!, name: 'Construction' },
+
+    // Farm Recovery Rotation
+    { posting_id: postingByTitle.get('Farm Recovery Rotation')!, name: 'Physical Stamina' },
+    { posting_id: postingByTitle.get('Farm Recovery Rotation')!, name: 'Teamwork' },
+    { posting_id: postingByTitle.get('Farm Recovery Rotation')!, name: 'Organisation' },
+    { posting_id: postingByTitle.get('Farm Recovery Rotation')!, name: 'Field Support' },
 
     // Flood Cleanup Crew
     { posting_id: postingByTitle.get('Flood Cleanup Crew')!, name: 'Physical Stamina' },
@@ -972,6 +1029,12 @@ async function seed() {
     { posting_id: postingByTitle.get('School Supply Restocking')!, name: 'Packing' },
     { posting_id: postingByTitle.get('School Supply Restocking')!, name: 'Inventory Handling' },
     { posting_id: postingByTitle.get('School Supply Restocking')!, name: 'Communication' },
+
+    // Crisis Hotline Coverage Week
+    { posting_id: postingByTitle.get('Crisis Hotline Coverage Week')!, name: 'Communication' },
+    { posting_id: postingByTitle.get('Crisis Hotline Coverage Week')!, name: 'Active Listening' },
+    { posting_id: postingByTitle.get('Crisis Hotline Coverage Week')!, name: 'Remote Support' },
+    { posting_id: postingByTitle.get('Crisis Hotline Coverage Week')!, name: 'Data Entry' },
 
     // Coastal Cleanup – Tyre
     { posting_id: postingByTitle.get('Coastal Cleanup')!, name: 'Physical Stamina' },
@@ -1486,6 +1549,42 @@ async function seed() {
       message: 'Happy to help the neighborhood recovery team with painting, cleanup, and volunteer support.',
       attended: false,
     },
+    {
+      volunteer_id: volByEmail.get('vol13@willing.social')!,
+      posting_id: postingByTitle.get('One-Day Hotline Sprint')!,
+      message: 'Available all day to support hotline documentation and urgent call routing.',
+      attended: false,
+    },
+    {
+      volunteer_id: volByEmail.get('vol14@willing.social')!,
+      posting_id: postingByTitle.get('One-Day Hotline Sprint')!,
+      message: 'Can assist the team with caller support and accurate note taking throughout the shift.',
+      attended: false,
+    },
+    {
+      volunteer_id: volByEmail.get('vol11@willing.social')!,
+      posting_id: postingByTitle.get('Farm Recovery Rotation')!,
+      message: 'Can help with cleanup and setup tasks across selected farm recovery days.',
+      attended: false,
+    },
+    {
+      volunteer_id: volByEmail.get('vol14@willing.social')!,
+      posting_id: postingByTitle.get('Farm Recovery Rotation')!,
+      message: 'Available for rotating field support days and logistics coordination.',
+      attended: false,
+    },
+    {
+      volunteer_id: volByEmail.get('vol13@willing.social')!,
+      posting_id: postingByTitle.get('Crisis Hotline Coverage Week')!,
+      message: 'Ready to cover multiple hotline days and keep referral notes organised.',
+      attended: false,
+    },
+    {
+      volunteer_id: volByEmail.get('vol14@willing.social')!,
+      posting_id: postingByTitle.get('Crisis Hotline Coverage Week')!,
+      message: 'Can commit to the full hotline coverage window and support caller triage.',
+      attended: false,
+    },
 
   ])
     .returning(['id', 'volunteer_id', 'posting_id', 'attended'])
@@ -1559,10 +1658,16 @@ async function seed() {
   ).execute();
 
   const partialEnrollmentDateSelections = new Map<string, string[]>([
-    [`${volByEmail.get('vol4@willing.social')}:${postingByTitle.get('Displaced Families Registration')}`, ['2026-02-12', '2026-02-14']],
-    [`${volByEmail.get('vol7@willing.social')}:${postingByTitle.get('Remote Homework Support')}`, ['2026-02-03', '2026-02-10', '2026-02-17', '2026-02-24']],
-    [`${volByEmail.get('vol11@willing.social')}:${postingByTitle.get('Neighborhood Repair Week')}`, ['2026-03-18', '2026-03-19', '2026-03-21']],
-    [`${volByEmail.get('vol12@willing.social')}:${postingByTitle.get('Neighborhood Repair Week')}`, ['2026-03-20', '2026-03-22']],
+    [`${volByEmail.get('vol4@willing.social')}:${postingByTitle.get('Displaced Families Registration')}`, [`${nowYear}-02-12`, `${nowYear}-02-14`]],
+    [`${volByEmail.get('vol7@willing.social')}:${postingByTitle.get('Remote Homework Support')}`, [`${nowYear}-02-03`, `${nowYear}-02-10`, `${nowYear}-02-17`, `${nowYear}-02-24`]],
+    [`${volByEmail.get('vol11@willing.social')}:${postingByTitle.get('Neighborhood Repair Week')}`, [`${nowYear}-03-18`, `${nowYear}-03-19`, `${nowYear}-03-21`]],
+    [`${volByEmail.get('vol12@willing.social')}:${postingByTitle.get('Neighborhood Repair Week')}`, [`${nowYear}-03-20`, `${nowYear}-03-22`]],
+    [`${volByEmail.get('vol13@willing.social')}:${postingByTitle.get('One-Day Hotline Sprint')}`, [`${nowYear}-03-25`]],
+    [`${volByEmail.get('vol14@willing.social')}:${postingByTitle.get('One-Day Hotline Sprint')}`, [`${nowYear}-03-25`]],
+    [`${volByEmail.get('vol11@willing.social')}:${postingByTitle.get('Farm Recovery Rotation')}`, [`${nowYear}-03-28`, `${nowYear}-03-29`]],
+    [`${volByEmail.get('vol14@willing.social')}:${postingByTitle.get('Farm Recovery Rotation')}`, [`${nowYear}-03-28`, `${nowYear}-03-30`]],
+    [`${volByEmail.get('vol13@willing.social')}:${postingByTitle.get('Crisis Hotline Coverage Week')}`, [`${nowYear}-04-05`, `${nowYear}-04-06`, `${nowYear}-04-07`]],
+    [`${volByEmail.get('vol14@willing.social')}:${postingByTitle.get('Crisis Hotline Coverage Week')}`, [`${nowYear}-04-05`, `${nowYear}-04-06`, `${nowYear}-04-07`]],
   ]);
 
   await database.insertInto('enrollment_date').values(
