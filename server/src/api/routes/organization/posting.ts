@@ -663,7 +663,7 @@ function createOrganizationPostingRouter(db: Kysely<Database>) {
           volunteer_id: application.volunteer_id,
           posting_id: application.posting_id,
           message: application.message ?? undefined,
-          attended: true,
+          attended: false,
         })
         .returningAll()
         .executeTakeFirst();

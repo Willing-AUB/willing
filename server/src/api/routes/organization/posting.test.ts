@@ -132,14 +132,16 @@ describe('Organization posting applications', () => {
 
     const enrollment = await transaction
       .selectFrom('enrollment')
-      .select(['id', 'volunteer_id', 'posting_id'])
+      .select(['id', 'volunteer_id', 'posting_id', 'attended'])
       .where('posting_id', '=', posting.id)
       .where('volunteer_id', '=', volunteer.id)
       .executeTakeFirstOrThrow();
 
+    expect(enrollment.attended).toBe(false);
+
     const enrollmentDates = await transaction
       .selectFrom('enrollment_date')
-      .select('date')
+      .select(['date', 'attended'])
       .where('enrollment_id', '=', enrollment.id)
       .orderBy('date', 'asc')
       .execute();
@@ -148,5 +150,6 @@ describe('Organization posting applications', () => {
       '2026-07-01',
       '2026-07-03',
     ]);
+    expect(enrollmentDates.every(row => row.attended === false)).toBe(true);
   });
 });
