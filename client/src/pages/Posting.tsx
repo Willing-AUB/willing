@@ -335,8 +335,8 @@ function PostingPage() {
         start_time: getTimeInputValue(postingResponse.posting.start_time),
         end_date: postingResponse.posting.end_date ? getDateInputValue(postingResponse.posting.end_date) : '',
         end_time: getTimeInputValue(postingResponse.posting.end_time),
-        max_volunteers: postingResponse.posting.max_volunteers?.toString() ?? undefined,
-        minimum_age: postingResponse.posting.minimum_age?.toString() ?? undefined,
+        max_volunteers: postingResponse.posting.max_volunteers?.toString() ?? '',
+        minimum_age: postingResponse.posting.minimum_age?.toString() ?? '',
         automatic_acceptance: postingResponse.posting.automatic_acceptance,
         is_closed: postingResponse.posting.is_closed,
         allows_partial_attendance: postingResponse.posting.allows_partial_attendance,
@@ -415,8 +415,8 @@ function PostingPage() {
       start_time: getTimeInputValue(postingResponse.posting.start_time),
       end_date: postingResponse.posting.end_date ? getDateInputValue(postingResponse.posting.end_date) : '',
       end_time: getTimeInputValue(postingResponse.posting.end_time),
-      max_volunteers: postingResponse.posting.max_volunteers?.toString() ?? undefined,
-      minimum_age: postingResponse.posting.minimum_age?.toString() ?? undefined,
+      max_volunteers: postingResponse.posting.max_volunteers?.toString() ?? '',
+      minimum_age: postingResponse.posting.minimum_age?.toString() ?? '',
       automatic_acceptance: postingResponse.posting.automatic_acceptance,
       is_closed: postingResponse.posting.is_closed,
       allows_partial_attendance: postingResponse.posting.allows_partial_attendance,
@@ -512,8 +512,8 @@ function PostingPage() {
           location_name: data.location_name.trim(),
           latitude: position[0],
           longitude: position[1],
-          max_volunteers: data.max_volunteers ? Number(data.max_volunteers) : undefined,
-          minimum_age: data.minimum_age ? Number(data.minimum_age) : undefined,
+          max_volunteers: data.max_volunteers === '' ? null : data.max_volunteers ? Number(data.max_volunteers) : undefined,
+          minimum_age: data.minimum_age === '' ? null : data.minimum_age ? Number(data.minimum_age) : undefined,
           automatic_acceptance: data.automatic_acceptance,
           is_closed: data.is_closed,
           skills: skills.length > 0 ? skills : undefined,
@@ -556,8 +556,8 @@ function PostingPage() {
       start_time: getTimeInputValue(posting.start_time),
       end_date: posting.end_date ? getDateInputValue(posting.end_date) : '',
       end_time: getTimeInputValue(posting.end_time),
-      max_volunteers: posting.max_volunteers?.toString() ?? undefined,
-      minimum_age: posting.minimum_age?.toString() ?? undefined,
+      max_volunteers: posting.max_volunteers?.toString() ?? '',
+      minimum_age: posting.minimum_age?.toString() ?? '',
       automatic_acceptance: posting.automatic_acceptance,
       is_closed: posting.is_closed,
       allows_partial_attendance: posting.allows_partial_attendance,
@@ -757,6 +757,14 @@ function PostingPage() {
     return formattedSelectedDates.join(', ');
   }, [formattedSelectedDates, hasPendingApplication, isEnrolled, posting]);
 
+  const fullPostingDates = useMemo(() => {
+    if (!posting?.allows_partial_attendance) return [];
+    if (posting.max_volunteers == null) return [];
+
+    const dateCapacity = 'date_capacity' in posting ? (posting.date_capacity ?? {}) : {};
+    return postingDates.filter(date => (dateCapacity[date] ?? 0) >= posting.max_volunteers!);
+  }, [posting, postingDates]);
+
   const canOpenAttendancePage = useMemo(() => {
     if (isVolunteerView || !posting) return false;
     return new Date() >= getPostingStartDateTime(posting);
@@ -852,8 +860,9 @@ function PostingPage() {
               selectedDates={selectedApplicationDates}
               onSelectedDatesChange={setSelectedApplicationDates}
               allowedDates={postingDates}
+              disabledDates={fullPostingDates}
             />
-            <p className="text-xs text-muted mt-2">You must select at least one day and fewer than all days.</p>
+            <p className="text-xs text-muted mt-2">You must select at least one day and fewer than all days. Full days are unavailable.</p>
           </div>
         )}
       </CustomMessageModal>
@@ -1258,16 +1267,10 @@ function PostingPage() {
                     </>
                   )
                 : (
-                    <div className="flex flex-wrap gap-2">
-                      <span className={`badge gap-2 ${posting?.is_closed ? 'badge-error' : isOpen ? 'badge-primary' : 'badge-secondary'}`}>
-                        {posting?.is_closed ? <Lock size={12} /> : isOpen ? <LockOpen size={12} /> : <Lock size={12} />}
-                        {posting?.is_closed ? 'Closed' : isPostingFull ? 'Full' : isOpen ? 'Open' : 'Review Based'}
-                      </span>
-                      <span className={`badge gap-2 ${posting?.allows_partial_attendance ? 'badge-info' : 'badge-accent'}`}>
-                        {posting?.allows_partial_attendance ? <Calendar size={12} /> : <Users size={12} />}
-                        {posting?.allows_partial_attendance ? 'Partial Attendance' : 'Full Commitment'}
-                      </span>
-                    </div>
+                    <span className={`badge gap-2 ${posting?.is_closed ? 'badge-error' : isOpen ? 'badge-primary' : 'badge-secondary'}`}>
+                      {posting?.is_closed ? <Lock size={12} /> : isOpen ? <LockOpen size={12} /> : <Lock size={12} />}
+                      {posting?.is_closed ? 'Closed' : isPostingFull ? 'Full' : isOpen ? 'Open' : 'Review Based'}
+                    </span>
                   )}
               <p className="text-xs opacity-70 mt-2">
                 {posting?.is_closed

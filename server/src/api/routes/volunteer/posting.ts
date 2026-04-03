@@ -91,6 +91,33 @@ function getPostingDates(startDate: Date | string, endDate: Date | string): stri
   return result;
 }
 
+async function getFullSelectedDates(
+  trx: Kysely<Database>,
+  postingId: number,
+  selectedDates: string[],
+  maxVolunteers: number | null | undefined,
+) {
+  if (maxVolunteers == null || selectedDates.length === 0) {
+    return [];
+  }
+
+  const dateCounts = await trx
+    .selectFrom('enrollment_date')
+    .select([
+      dateColumnAsIsoSql('enrollment_date.date').as('date'),
+      sql<number>`count(*)`.as('count'),
+    ])
+    .where('posting_id', '=', postingId)
+    .where('enrollment_date.date', 'in', selectedDates.map(date => toUtcDateOnly(date)))
+    .groupBy('enrollment_date.date')
+    .execute();
+
+  return dateCounts
+    .filter(row => Number(row.count ?? 0) >= maxVolunteers)
+    .map(row => row.date)
+    .filter((date): date is string => Boolean(date));
+}
+
 function calculateAge(dateOfBirth: string, at: Date = new Date()): number | null {
   const dob = new Date(dateOfBirth);
   if (Number.isNaN(dob.getTime())) {
@@ -495,6 +522,12 @@ function createVolunteerPostingRouter(db: Kysely<Database>) {
         res.status(400);
         throw new Error(`Selected date ${invalidDate} is outside the posting date range`);
       }
+
+      const fullDates = await getFullSelectedDates(db, id, selectedDates, posting.max_volunteers);
+      if (fullDates.length > 0) {
+        res.status(403);
+        throw new Error(`Selected date ${fullDates[0]} is already full`);
+      }
     } else {
       if (dates && dates.length > 0) {
         res.status(400);
@@ -569,6 +602,14 @@ function createVolunteerPostingRouter(db: Kysely<Database>) {
           }
         }
 
+        if (isPartial) {
+          const fullDates = await getFullSelectedDates(trx, id, selectedDates, lockedPosting.max_volunteers);
+          if (fullDates.length > 0) {
+            res.status(403);
+            throw new Error(`Selected date ${fullDates[0]} is already full`);
+          }
+        }
+
         const createdEnrollment = await trx
           .insertInto('enrollment')
           .values({
@@ -637,6 +678,14 @@ function createVolunteerPostingRouter(db: Kysely<Database>) {
           if (Number(enrollmentCountRow?.count ?? 0) >= lockedPosting.max_volunteers) {
             res.status(403);
             throw new Error('This posting has reached the maximum number of volunteers');
+          }
+        }
+
+        if (isPartial) {
+          const fullDates = await getFullSelectedDates(trx, id, selectedDates, lockedPosting.max_volunteers);
+          if (fullDates.length > 0) {
+            res.status(403);
+            throw new Error(`Selected date ${fullDates[0]} is already full`);
           }
         }
 

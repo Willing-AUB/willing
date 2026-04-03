@@ -891,6 +891,63 @@ describe('GET /volunteer/posting/:id selected partial dates', () => {
     expect(response.body.posting_dates.at(-1)).toBe('2026-04-29');
     expect(response.body.posting_dates).toHaveLength(29);
   });
+
+  test('rejects selecting a full date for partial attendance postings', async () => {
+    const { token } = await createVolunteerAccount(transaction, { email: 'partial-full-day-blocked@example.com' });
+    const { volunteer: enrolledVolunteer } = await createVolunteerAccount(transaction, { email: 'partial-full-day-existing@example.com' });
+    const { organization } = await createOrganizationAccount(transaction, { email: 'partial-full-day-org@example.com' });
+
+    const posting = await transaction
+      .insertInto('organization_posting')
+      .values({
+        organization_id: organization.id,
+        title: 'Per-Day Capacity Event',
+        description: 'One date is already full',
+        latitude: 33.9,
+        longitude: 35.5,
+        max_volunteers: 1,
+        start_date: new Date('2026-06-01T00:00:00.000Z'),
+        start_time: '09:00:00',
+        end_date: new Date('2026-06-03T00:00:00.000Z'),
+        end_time: '17:00:00',
+        minimum_age: 18,
+        automatic_acceptance: false,
+        is_closed: false,
+        allows_partial_attendance: true,
+        location_name: 'Test Location',
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow();
+
+    const existingEnrollment = await transaction
+      .insertInto('enrollment')
+      .values({
+        volunteer_id: enrolledVolunteer.id,
+        posting_id: posting.id,
+        message: 'Already assigned to one day',
+        attended: false,
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow();
+
+    await transaction
+      .insertInto('enrollment_date')
+      .values({
+        enrollment_id: existingEnrollment.id,
+        posting_id: posting.id,
+        date: new Date('2026-06-02T00:00:00.000Z'),
+        attended: false,
+      })
+      .execute();
+
+    const response = await server
+      .post(`/volunteer/posting/${posting.id}/enroll`)
+      .set('Authorization', 'Bearer ' + token)
+      .send({ dates: ['2026-06-02'], message: 'Trying to apply to a full day' })
+      .expect(403);
+
+    expect(response.body.message).toBe('Selected date 2026-06-02 is already full');
+  });
 });
 
 describe('GET /volunteer/crises/pinned', () => {

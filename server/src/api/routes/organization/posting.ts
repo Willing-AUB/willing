@@ -96,7 +96,7 @@ const getPostingDates = (startDate: Date | string, endDate: Date | string): stri
 };
 const areDatesEqual = (left: Date | undefined, right: Date | undefined) => (left?.getTime() ?? null) === (right?.getTime() ?? null);
 const areTimeValuesEqual = (left: string | undefined, right: string | undefined) => (left ?? null) === (right ?? null);
-const isPostingFull = (maxVolunteers: number | undefined, enrollmentCount: number) => maxVolunteers !== undefined && maxVolunteers !== null && enrollmentCount >= maxVolunteers;
+const isPostingFull = (maxVolunteers: number | null | undefined, enrollmentCount: number) => maxVolunteers !== undefined && maxVolunteers !== null && enrollmentCount >= maxVolunteers;
 
 const postingIdParamsSchema = zod.object({
   id: zod.coerce.number().int().positive('ID must be a positive number'),
