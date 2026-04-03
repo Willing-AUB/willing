@@ -335,7 +335,7 @@ function ControlledCalendarInfo({
   const startTriggerRef = useRef<HTMLButtonElement>(null);
   const endTriggerRef = useRef<HTMLButtonElement>(null);
   const activePopoverRef = useRef<HTMLDivElement>(null);
-  const closeTimeoutRef = useRef<number | undefined>(undefined);
+  const closeTimeoutRef = useRef<number | null>(null);
 
   const mode = selectionMode ?? 'interval';
 
@@ -399,7 +399,7 @@ function ControlledCalendarInfo({
   const clearCloseTimeout = () => {
     if (closeTimeoutRef.current != null) {
       window.clearTimeout(closeTimeoutRef.current);
-      closeTimeoutRef.current = undefined;
+      closeTimeoutRef.current = null;
     }
   };
 
@@ -412,7 +412,7 @@ function ControlledCalendarInfo({
       setActivePicker(null);
       setClosingPicker(null);
       setRangeHoverDate(undefined);
-      closeTimeoutRef.current = undefined;
+      closeTimeoutRef.current = null;
     }, POPOVER_ANIMATION_DURATION_MS);
   };
 
@@ -714,9 +714,6 @@ function ControlledCalendarInfo({
                   }}
                   components={dayPickerComponents}
                   onDayMouseEnter={(date, modifiers) => {
-                    handleRangePreviewHover(date, modifiers.disabled);
-                  }}
-                  onDayPointerEnter={(date, modifiers) => {
                     handleRangePreviewHover(date, modifiers.disabled);
                   }}
                   onDayMouseLeave={() => setRangeHoverDate(undefined)}
