@@ -312,14 +312,14 @@ export default function OrganizationPostingCreate() {
                       label: 'Partial Attendance',
                       description: 'Volunteers can choose specific days.',
                       Icon: Calendar,
-                      btnColor: 'btn-info',
+                      btnColor: 'btn-primary',
                     },
                     {
                       value: false,
                       label: 'Full Commitment',
                       description: 'Volunteers must attend all dates.',
                       Icon: Users,
-                      btnColor: 'btn-accent',
+                      btnColor: 'btn-secondary',
                     },
                   ]}
                 />
