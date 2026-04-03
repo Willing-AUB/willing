@@ -15,11 +15,16 @@ async function seed() {
 
   await sql`
   TRUNCATE TABLE
+    enrollment_application_date,
+    enrollment_date,
     enrollment_application,
     enrollment,
     posting_skill,
     volunteer_skill,
     organization_posting,
+    platform_certificate_settings,
+    organization_certificate_info,
+    volunteer_pending_account,
     organization_request,
     volunteer_account,
     organization_account,
@@ -35,6 +40,72 @@ async function seed() {
     password: passwordHash,
   }).execute();
 
+  await database.insertInto('platform_certificate_settings').values({
+    signatory_name: 'Willing Platform',
+    signatory_position: 'Volunteer Program Director',
+    signature_path: 'platform-signatures/willing-platform-signature.png',
+    signature_uploaded_by_admin_id: 1,
+  }).execute();
+
+  const certificateInfos = await database.insertInto('organization_certificate_info')
+    .values([
+      {
+        certificate_feature_enabled: true,
+        hours_threshold: 8,
+        signatory_name: 'Mira Khoury',
+        signatory_position: 'Programs Director',
+        signature_path: 'org-signatures/nour-relief-signature.png',
+      },
+      {
+        certificate_feature_enabled: false,
+        hours_threshold: null,
+        signatory_name: null,
+        signatory_position: null,
+        signature_path: null,
+      },
+      {
+        certificate_feature_enabled: true,
+        hours_threshold: 5,
+        signatory_name: 'Fadi Daher',
+        signatory_position: 'Community Partnerships Lead',
+        signature_path: 'org-signatures/arz-community-signature.png',
+      },
+      {
+        certificate_feature_enabled: true,
+        hours_threshold: 6,
+        signatory_name: 'Nadine Saliba',
+        signatory_position: 'Executive Director',
+        signature_path: 'org-signatures/cedar-response-signature.png',
+      },
+      {
+        certificate_feature_enabled: false,
+        hours_threshold: null,
+        signatory_name: null,
+        signatory_position: null,
+        signature_path: null,
+      },
+    ])
+    .returning(['id'])
+    .execute();
+
+  const [
+    nourReliefCertificateInfo,
+    ajialounaCertificateInfo,
+    arzCommunityCertificateInfo,
+    cedarResponseCertificateInfo,
+    bekaaUpliftCertificateInfo,
+  ] = certificateInfos;
+
+  if (
+    !nourReliefCertificateInfo
+    || !ajialounaCertificateInfo
+    || !arzCommunityCertificateInfo
+    || !cedarResponseCertificateInfo
+    || !bekaaUpliftCertificateInfo
+  ) {
+    throw new Error('Failed to seed organization certificate info');
+  }
+
   const orgs = await database.insertInto('organization_account')
     .values([
       {
@@ -45,6 +116,9 @@ async function seed() {
         latitude: 33.8938,
         longitude: 35.5018,
         location_name: 'Beirut',
+        description: 'Emergency relief NGO coordinating shelter, food, and health support across Beirut.',
+        logo_path: 'org-logos/nour-relief.png',
+        certificate_info_id: nourReliefCertificateInfo.id,
         password: passwordHash,
       },
       {
@@ -55,6 +129,9 @@ async function seed() {
         latitude: 33.3547,
         longitude: 35.4955,
         location_name: 'Saida',
+        description: 'Youth-focused nonprofit delivering educational and inclusive community programming in South Lebanon.',
+        logo_path: 'org-logos/ajialouna.png',
+        certificate_info_id: ajialounaCertificateInfo.id,
         password: passwordHash,
       },
       {
@@ -65,6 +142,35 @@ async function seed() {
         latitude: 34.4367,
         longitude: 35.8333,
         location_name: 'Tripoli',
+        description: 'North Lebanon volunteer network supporting environmental recovery and neighborhood resilience.',
+        logo_path: 'org-logos/arz-community.png',
+        certificate_info_id: arzCommunityCertificateInfo.id,
+        password: passwordHash,
+      },
+      {
+        name: 'Cedar Response',
+        email: 'org4@willing.social',
+        phone_number: '+96181777000',
+        url: 'https://cedarresponse.org',
+        latitude: 33.8889,
+        longitude: 35.4942,
+        location_name: 'Beirut',
+        description: 'Rapid-response nonprofit focused on volunteer coordination, hotline support, and urban recovery.',
+        logo_path: 'org-logos/cedar-response.png',
+        certificate_info_id: cedarResponseCertificateInfo.id,
+        password: passwordHash,
+      },
+      {
+        name: 'Bekaa Uplift',
+        email: 'org5@willing.social',
+        phone_number: '+96188881111',
+        url: 'https://bekaauplift.org',
+        latitude: 33.8462,
+        longitude: 35.9020,
+        location_name: 'Zahle',
+        description: 'Bekaa-based community organization supporting farms, schools, and flood recovery efforts.',
+        logo_path: 'org-logos/bekaa-uplift.png',
+        certificate_info_id: bekaaUpliftCertificateInfo.id,
         password: passwordHash,
       },
     ])
@@ -199,6 +305,42 @@ async function seed() {
         date_of_birth: '2001-06-06',
         description: 'Flexible volunteer. Prefers to keep profile private.',
       },
+      {
+        first_name: 'Sami',
+        last_name: 'Khater',
+        email: 'vol11@willing.social',
+        password: passwordHash,
+        gender: 'male',
+        date_of_birth: '1995-04-09',
+        description: 'Operations-minded volunteer with warehouse and dispatch experience.',
+      },
+      {
+        first_name: 'Lea',
+        last_name: 'Rizk',
+        email: 'vol12@willing.social',
+        password: passwordHash,
+        gender: 'female',
+        date_of_birth: '1999-10-02',
+        description: 'Community educator who enjoys tutoring, facilitation, and youth engagement.',
+      },
+      {
+        first_name: 'Omar',
+        last_name: 'Haddad',
+        email: 'vol13@willing.social',
+        password: passwordHash,
+        gender: 'male',
+        date_of_birth: '1997-12-19',
+        description: 'Tech-savvy coordinator comfortable with helplines, spreadsheets, and operations support.',
+      },
+      {
+        first_name: 'Dana',
+        last_name: 'Mokbel',
+        email: 'vol14@willing.social',
+        password: passwordHash,
+        gender: 'female',
+        date_of_birth: '2000-03-27',
+        description: 'Patient and dependable volunteer with experience in admin support and event coordination.',
+      },
     ].map(volunteer => ({
       ...volunteer,
       gender: volunteer.gender as 'male' | 'female' | 'other',
@@ -296,6 +438,34 @@ async function seed() {
     };
   };
 
+  const toIsoDate = (value: Date) => {
+    const year = value.getUTCFullYear();
+    const month = `${value.getUTCMonth() + 1}`.padStart(2, '0');
+    const day = `${value.getUTCDate()}`.padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const getDateRange = (startDate: Date, endDate: Date) => {
+    const dates: string[] = [];
+    const cursor = new Date(Date.UTC(
+      startDate.getUTCFullYear(),
+      startDate.getUTCMonth(),
+      startDate.getUTCDate(),
+    ));
+    const end = new Date(Date.UTC(
+      endDate.getUTCFullYear(),
+      endDate.getUTCMonth(),
+      endDate.getUTCDate(),
+    ));
+
+    while (cursor.getTime() <= end.getTime()) {
+      dates.push(toIsoDate(cursor));
+      cursor.setUTCDate(cursor.getUTCDate() + 1);
+    }
+
+    return dates;
+  };
+
   // ─── Postings ─────────────────────────────────────────────────────────────────
 
   const postings = await database.insertInto('organization_posting')
@@ -333,6 +503,7 @@ async function seed() {
         ...buildTemporalFields(`${nowYear}-02-12T08:00:00Z`, `${nowYear}-02-14T18:00:00Z`),
         minimum_age: 18,
         automatic_acceptance: false,
+        allows_partial_attendance: true,
         is_closed: false,
       },
       {
@@ -511,6 +682,7 @@ async function seed() {
         ...buildTemporalFields(`${nowYear}-02-01T15:00:00Z`, `${nowYear}-04-30T18:00:00Z`),
         minimum_age: 18,
         automatic_acceptance: false,
+        allows_partial_attendance: true,
         is_closed: false,
       },
       {
@@ -562,6 +734,65 @@ async function seed() {
         is_closed: false,
       },
       {
+        organization_id: orgByName.get('Cedar Response')!,
+        crisis_id: crisisByName.get('Beirut Port Explosion Aftermath')!,
+        title: 'Volunteer Helpline Shifts',
+        description: 'Take scheduled helpline shifts to guide affected residents toward support services, legal referrals, and psychosocial resources. Clear communication and calm call handling are important.',
+        latitude: 33.8955,
+        longitude: 35.5140,
+        location_name: 'Cedar Response Office, Gemmayze',
+        max_volunteers: 12,
+        ...buildTemporalFields(`${nowYear}-03-10T09:00:00Z`, `${nowYear}-03-14T17:00:00Z`),
+        minimum_age: 18,
+        automatic_acceptance: false,
+        allows_partial_attendance: true,
+        is_closed: false,
+      },
+      {
+        organization_id: orgByName.get('Cedar Response')!,
+        crisis_id: crisisByName.get('Beirut Port Explosion Aftermath')!,
+        title: 'Neighborhood Repair Week',
+        description: 'Support teams repainting, cleaning, and repairing damaged community spaces over a five-day neighborhood recovery push.',
+        latitude: 33.8981,
+        longitude: 35.5182,
+        location_name: 'Mar Mikhael Recovery Hub',
+        max_volunteers: 24,
+        ...buildTemporalFields(`${nowYear}-03-18T08:00:00Z`, `${nowYear}-03-22T16:00:00Z`),
+        minimum_age: 17,
+        automatic_acceptance: true,
+        allows_partial_attendance: true,
+        is_closed: false,
+      },
+      {
+        organization_id: orgByName.get('Bekaa Uplift')!,
+        crisis_id: crisisByName.get('Bekaa Valley Flooding')!,
+        title: 'Flood Cleanup Crew',
+        description: 'Join teams helping families clear mud, salvage belongings, and reset homes after flooding in the Bekaa Valley.',
+        latitude: 33.8462,
+        longitude: 35.9020,
+        location_name: 'Zahle Flood Recovery Point',
+        max_volunteers: 18,
+        ...buildTemporalFields(`${nowYear}-03-12T08:00:00Z`, `${nowYear}-03-13T15:00:00Z`),
+        minimum_age: 18,
+        automatic_acceptance: true,
+        is_closed: false,
+      },
+      {
+        organization_id: orgByName.get('Bekaa Uplift')!,
+        crisis_id: crisisByName.get('Bekaa Valley Flooding')!,
+        title: 'School Supply Restocking',
+        description: 'Help restock school materials and classroom kits for schools affected by flooding. Includes sorting, packing, and local delivery coordination.',
+        latitude: 33.8500,
+        longitude: 35.9100,
+        location_name: 'Bekaa Uplift Learning Hub',
+        max_volunteers: 16,
+        ...buildTemporalFields(`${nowYear}-03-24T09:00:00Z`, `${nowYear}-03-26T14:00:00Z`),
+        minimum_age: 16,
+        automatic_acceptance: false,
+        allows_partial_attendance: true,
+        is_closed: false,
+      },
+      {
         organization_id: orgByName.get('Arz Community')!,
         crisis_id: crisisByName.get('Tyre Coastal Pollution')!,
         title: 'Coastal Cleanup',
@@ -608,7 +839,7 @@ async function seed() {
         is_closed: true,
       },
     ])
-    .returning(['id', 'title'])
+    .returning(['id', 'title', 'start_date', 'end_date', 'allows_partial_attendance'])
     .execute();
 
   const postingByTitle = new Map(postings.map(p => [p.title, p.id]));
@@ -718,6 +949,30 @@ async function seed() {
     { posting_id: postingByTitle.get('Medical Supplies Inventory & Sorting')!, name: 'Label Checking' },
     { posting_id: postingByTitle.get('Medical Supplies Inventory & Sorting')!, name: 'Accuracy' },
 
+    // Volunteer Helpline Shifts
+    { posting_id: postingByTitle.get('Volunteer Helpline Shifts')!, name: 'Communication' },
+    { posting_id: postingByTitle.get('Volunteer Helpline Shifts')!, name: 'Active Listening' },
+    { posting_id: postingByTitle.get('Volunteer Helpline Shifts')!, name: 'Remote Support' },
+    { posting_id: postingByTitle.get('Volunteer Helpline Shifts')!, name: 'Data Entry' },
+
+    // Neighborhood Repair Week
+    { posting_id: postingByTitle.get('Neighborhood Repair Week')!, name: 'Teamwork' },
+    { posting_id: postingByTitle.get('Neighborhood Repair Week')!, name: 'Physical Stamina' },
+    { posting_id: postingByTitle.get('Neighborhood Repair Week')!, name: 'Painting' },
+    { posting_id: postingByTitle.get('Neighborhood Repair Week')!, name: 'Construction' },
+
+    // Flood Cleanup Crew
+    { posting_id: postingByTitle.get('Flood Cleanup Crew')!, name: 'Physical Stamina' },
+    { posting_id: postingByTitle.get('Flood Cleanup Crew')!, name: 'Teamwork' },
+    { posting_id: postingByTitle.get('Flood Cleanup Crew')!, name: 'Safety Awareness' },
+    { posting_id: postingByTitle.get('Flood Cleanup Crew')!, name: 'Logistics' },
+
+    // School Supply Restocking
+    { posting_id: postingByTitle.get('School Supply Restocking')!, name: 'Organisation' },
+    { posting_id: postingByTitle.get('School Supply Restocking')!, name: 'Packing' },
+    { posting_id: postingByTitle.get('School Supply Restocking')!, name: 'Inventory Handling' },
+    { posting_id: postingByTitle.get('School Supply Restocking')!, name: 'Communication' },
+
     // Coastal Cleanup – Tyre
     { posting_id: postingByTitle.get('Coastal Cleanup')!, name: 'Physical Stamina' },
     { posting_id: postingByTitle.get('Coastal Cleanup')!, name: 'Environmental Awareness' },
@@ -813,11 +1068,35 @@ async function seed() {
     { volunteer_id: volByEmail.get('vol10@willing.social')!, name: 'Communication' },
     { volunteer_id: volByEmail.get('vol10@willing.social')!, name: 'Teamwork' },
     { volunteer_id: volByEmail.get('vol10@willing.social')!, name: 'Organisation' },
+
+    // vol11 – operations / logistics
+    { volunteer_id: volByEmail.get('vol11@willing.social')!, name: 'Logistics' },
+    { volunteer_id: volByEmail.get('vol11@willing.social')!, name: 'Inventory Handling' },
+    { volunteer_id: volByEmail.get('vol11@willing.social')!, name: 'Organisation' },
+    { volunteer_id: volByEmail.get('vol11@willing.social')!, name: 'Physical Stamina' },
+
+    // vol12 – tutoring / facilitation
+    { volunteer_id: volByEmail.get('vol12@willing.social')!, name: 'Teaching' },
+    { volunteer_id: volByEmail.get('vol12@willing.social')!, name: 'Child Engagement' },
+    { volunteer_id: volByEmail.get('vol12@willing.social')!, name: 'Communication' },
+    { volunteer_id: volByEmail.get('vol12@willing.social')!, name: 'Patience' },
+
+    // vol13 – tech / coordination
+    { volunteer_id: volByEmail.get('vol13@willing.social')!, name: 'Remote Support' },
+    { volunteer_id: volByEmail.get('vol13@willing.social')!, name: 'Data Entry' },
+    { volunteer_id: volByEmail.get('vol13@willing.social')!, name: 'Communication' },
+    { volunteer_id: volByEmail.get('vol13@willing.social')!, name: 'Problem Solving' },
+
+    // vol14 – admin / events
+    { volunteer_id: volByEmail.get('vol14@willing.social')!, name: 'Organisation' },
+    { volunteer_id: volByEmail.get('vol14@willing.social')!, name: 'Communication' },
+    { volunteer_id: volByEmail.get('vol14@willing.social')!, name: 'Data Entry' },
+    { volunteer_id: volByEmail.get('vol14@willing.social')!, name: 'Teamwork' },
   ]).execute();
 
   // ─── Enrollment Applications ──────────────────────────────────────────────────
 
-  await database.insertInto('enrollment_application').values([
+  const applications = await database.insertInto('enrollment_application').values([
     // Field First Aid Support (org1, review-based)
     {
       volunteer_id: volByEmail.get('vol3@willing.social')!,
@@ -884,11 +1163,33 @@ async function seed() {
       posting_id: postingByTitle.get('Medical Supplies Inventory & Sorting')!,
       message: 'Good with physical organisation and sorting. Can commit to the full morning.',
     },
-  ]).execute();
+    {
+      volunteer_id: volByEmail.get('vol13@willing.social')!,
+      posting_id: postingByTitle.get('Volunteer Helpline Shifts')!,
+      message: 'Comfortable with helpline systems, spreadsheets, and coordinating information for callers across multiple shifts.',
+    },
+    {
+      volunteer_id: volByEmail.get('vol14@willing.social')!,
+      posting_id: postingByTitle.get('Volunteer Helpline Shifts')!,
+      message: 'Strong communication and admin coordination skills. Happy to cover selected daytime shifts.',
+    },
+    {
+      volunteer_id: volByEmail.get('vol12@willing.social')!,
+      posting_id: postingByTitle.get('School Supply Restocking')!,
+      message: 'Would love to help schools recover and can support with sorting, packing, and classroom kit prep.',
+    },
+    {
+      volunteer_id: volByEmail.get('vol11@willing.social')!,
+      posting_id: postingByTitle.get('School Supply Restocking')!,
+      message: 'Warehouse and operations experience. Comfortable with inventory and loading support for school deliveries.',
+    },
+  ])
+    .returning(['id', 'volunteer_id', 'posting_id'])
+    .execute();
 
   // ─── Enrollments ──────────────────────────────────────────────────────────────
 
-  await database.insertInto('enrollment').values([
+  const enrollments = await database.insertInto('enrollment').values([
 
     // ── Approved from review-based postings ────────────────────────────────────
 
@@ -1155,8 +1456,133 @@ async function seed() {
       message: 'Available to distribute aid kits across Beirut neighborhoods.',
       attended: false,
     },
+    {
+      volunteer_id: volByEmail.get('vol11@willing.social')!,
+      posting_id: postingByTitle.get('Flood Cleanup Crew')!,
+      message: 'Ready to help with cleanup logistics, hauling, and field coordination in the Bekaa.',
+      attended: false,
+    },
+    {
+      volunteer_id: volByEmail.get('vol14@willing.social')!,
+      posting_id: postingByTitle.get('Flood Cleanup Crew')!,
+      message: 'Available for flood recovery support and team coordination on site.',
+      attended: false,
+    },
+    {
+      volunteer_id: volByEmail.get('vol13@willing.social')!,
+      posting_id: postingByTitle.get('Flood Cleanup Crew')!,
+      message: 'Can support field coordination, volunteer communication, and on-site logistics in the Bekaa.',
+      attended: false,
+    },
+    {
+      volunteer_id: volByEmail.get('vol11@willing.social')!,
+      posting_id: postingByTitle.get('Neighborhood Repair Week')!,
+      message: 'Can support repair teams for selected days and help keep materials organised.',
+      attended: true,
+    },
+    {
+      volunteer_id: volByEmail.get('vol12@willing.social')!,
+      posting_id: postingByTitle.get('Neighborhood Repair Week')!,
+      message: 'Happy to help the neighborhood recovery team with painting, cleanup, and volunteer support.',
+      attended: false,
+    },
 
-  ]).execute();
+  ])
+    .returning(['id', 'volunteer_id', 'posting_id', 'attended'])
+    .execute();
+
+  const applicationByKey = new Map(
+    applications.map(application => [`${application.volunteer_id}:${application.posting_id}`, application.id] as const),
+  );
+
+  const partialApplicationDateSelections: Array<{ volunteerEmail: string; postingTitle: string; dates: string[] }> = [
+    {
+      volunteerEmail: 'vol4@willing.social',
+      postingTitle: 'Displaced Families Registration',
+      dates: ['2026-02-12', '2026-02-14'],
+    },
+    {
+      volunteerEmail: 'vol2@willing.social',
+      postingTitle: 'Displaced Families Registration',
+      dates: ['2026-02-13'],
+    },
+    {
+      volunteerEmail: 'vol10@willing.social',
+      postingTitle: 'Displaced Families Registration',
+      dates: ['2026-02-12', '2026-02-13'],
+    },
+    {
+      volunteerEmail: 'vol7@willing.social',
+      postingTitle: 'Remote Homework Support',
+      dates: ['2026-02-03', '2026-02-10', '2026-02-17', '2026-02-24'],
+    },
+    {
+      volunteerEmail: 'vol2@willing.social',
+      postingTitle: 'Remote Homework Support',
+      dates: ['2026-02-02', '2026-02-09', '2026-02-16'],
+    },
+    {
+      volunteerEmail: 'vol13@willing.social',
+      postingTitle: 'Volunteer Helpline Shifts',
+      dates: ['2026-03-10', '2026-03-12', '2026-03-14'],
+    },
+    {
+      volunteerEmail: 'vol14@willing.social',
+      postingTitle: 'Volunteer Helpline Shifts',
+      dates: ['2026-03-11', '2026-03-13'],
+    },
+    {
+      volunteerEmail: 'vol12@willing.social',
+      postingTitle: 'School Supply Restocking',
+      dates: ['2026-03-24', '2026-03-26'],
+    },
+    {
+      volunteerEmail: 'vol11@willing.social',
+      postingTitle: 'School Supply Restocking',
+      dates: ['2026-03-25'],
+    },
+  ];
+
+  await database.insertInto('enrollment_application_date').values(
+    partialApplicationDateSelections.flatMap(({ volunteerEmail, postingTitle, dates }) => {
+      const volunteerId = volByEmail.get(volunteerEmail);
+      const postingId = postingByTitle.get(postingTitle);
+      const applicationId = volunteerId && postingId ? applicationByKey.get(`${volunteerId}:${postingId}`) : undefined;
+
+      if (!applicationId) return [];
+
+      return dates.map(date => ({
+        application_id: applicationId,
+        date: new Date(`${date}T00:00:00.000Z`),
+      }));
+    }),
+  ).execute();
+
+  const partialEnrollmentDateSelections = new Map<string, string[]>([
+    [`${volByEmail.get('vol4@willing.social')}:${postingByTitle.get('Displaced Families Registration')}`, ['2026-02-12', '2026-02-14']],
+    [`${volByEmail.get('vol7@willing.social')}:${postingByTitle.get('Remote Homework Support')}`, ['2026-02-03', '2026-02-10', '2026-02-17', '2026-02-24']],
+    [`${volByEmail.get('vol11@willing.social')}:${postingByTitle.get('Neighborhood Repair Week')}`, ['2026-03-18', '2026-03-19', '2026-03-21']],
+    [`${volByEmail.get('vol12@willing.social')}:${postingByTitle.get('Neighborhood Repair Week')}`, ['2026-03-20', '2026-03-22']],
+  ]);
+
+  await database.insertInto('enrollment_date').values(
+    enrollments.flatMap((enrollment) => {
+      const posting = postings.find(postingRow => postingRow.id === enrollment.posting_id);
+      if (!posting) return [];
+
+      const partialKey = `${enrollment.volunteer_id}:${enrollment.posting_id}`;
+      const dateStrings = posting.allows_partial_attendance
+        ? (partialEnrollmentDateSelections.get(partialKey) ?? [])
+        : getDateRange(posting.start_date, posting.end_date);
+
+      return dateStrings.map(date => ({
+        enrollment_id: enrollment.id,
+        posting_id: enrollment.posting_id,
+        date: new Date(`${date}T00:00:00.000Z`),
+        attended: enrollment.attended,
+      }));
+    }),
+  ).execute();
 
   console.log('─────────────────────────────────────────────');
   console.log('Seed complete.');
@@ -1165,10 +1591,10 @@ async function seed() {
   console.log('Admin:');
   console.log('  admin@willing.social');
   console.log('');
-  console.log('Organizations (approved): org1@willing.social, org2@willing.social, org3@willing.social');
+  console.log('Organizations (approved): org1@willing.social, org2@willing.social, org3@willing.social, org4@willing.social, org5@willing.social');
 
   console.log('');
-  console.log('Volunteers: vol1@willing.social, vol2@willing.social, vol3@willing.social, vol4@willing.social, vol5@willing.social, vol6@willing.social, vol7@willing.social, vol8@willing.social, vol9@willing.social, vol10@willing.social');
+  console.log('Volunteers: vol1@willing.social, vol2@willing.social, vol3@willing.social, vol4@willing.social, vol5@willing.social, vol6@willing.social, vol7@willing.social, vol8@willing.social, vol9@willing.social, vol10@willing.social, vol11@willing.social, vol12@willing.social, vol13@willing.social, vol14@willing.social');
 
   await database.destroy();
 }
