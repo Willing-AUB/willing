@@ -64,7 +64,6 @@ function PostingCard({ posting, showCrisis = true }: PostingCardProps) {
   else if (volunteerPercent > 70) radialColor = 'text-warning';
 
   return (
-    // <article className="relative rounded-xl border border-base-200 bg-base-100 shadow-sm hover:shadow-md transition-shadow h-full flex flex-col overflow-visible">
     <Card padding={false}>
       {showCrisis && posting.crisis_name && posting.crisis_id && (
         <Link
@@ -211,8 +210,9 @@ function PostingCard({ posting, showCrisis = true }: PostingCardProps) {
         </div>
 
         <div className="px-4 md:px-5 mt-4 border-t border-base-200 pt-3">
-          <div className="flex flex-wrap items-center gap-4 text-sm text-muted">
-            <div className="flex items-center gap-2 flex-1">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm text-muted">
+            {/* Left column: Location */}
+            <div className="flex items-center gap-2">
               <MapPin size={16} className="text-primary shrink-0" />
               <div>
                 <p className="text-xs opacity-70">LOCATION</p>
@@ -220,7 +220,17 @@ function PostingCard({ posting, showCrisis = true }: PostingCardProps) {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 flex-1">
+            {/* Right column: Commitment */}
+            <div className="flex items-center gap-2 pl-4">
+              <Calendar size={16} className="text-primary shrink-0" />
+              <div>
+                <p className="text-xs opacity-70">COMMITMENT</p>
+                <p className="text-sm">{posting.allows_partial_attendance ? 'Partial' : 'Full'}</p>
+              </div>
+            </div>
+
+            {/* Left column: Volunteers */}
+            <div className="flex items-center gap-2">
               <span className="relative w-8 h-8">
                 <div
                   className={`radial-progress absolute inset-0 m-auto ${radialColor}`}
@@ -236,18 +246,22 @@ function PostingCard({ posting, showCrisis = true }: PostingCardProps) {
               </div>
             </div>
 
-            {posting.minimum_age && (
-              <div className="flex items-center gap-2 flex-1">
-                <Cake size={16} className="text-primary" />
-                <div>
-                  <p className="text-xs opacity-70">AGE</p>
-                  <p className="text-sm">
-                    {posting.minimum_age}
-                    +
-                  </p>
-                </div>
-              </div>
-            )}
+            {/* Right column: Age */}
+            {posting.minimum_age
+              ? (
+                  <div className="flex items-center gap-2 pl-4">
+                    <Cake size={16} className="text-primary shrink-0" />
+                    <div>
+                      <p className="text-xs opacity-70">AGE</p>
+                      <p className="text-sm">
+                        {posting.minimum_age}
+                        {' '}
+                        +
+                      </p>
+                    </div>
+                  </div>
+                )
+              : <div />}
           </div>
         </div>
       </div>

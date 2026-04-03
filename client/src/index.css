@@ -162,8 +162,10 @@ body {
 }
 
 .willing-day-picker .rdp-today:not(.rdp-selected) .rdp-day_button {
-  background: color-mix(in oklch, var(--color-primary) 20%, transparent);
-  border-color: transparent;
+  background: transparent;
+  border: 1px solid rgba(var(--color-base-content-rgb), 0.2);
+  box-shadow: none;
+  color: var(--color-base-content);
 }
 
 .willing-day-picker .rdp-disabled .rdp-day_button {

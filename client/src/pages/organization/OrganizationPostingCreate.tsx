@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Send, MapPin, Edit3, Users, ShieldCheck, LockOpen, Lock, Tag, Plus } from 'lucide-react';
+import { Send, MapPin, Edit3, Users, ShieldCheck, LockOpen, Lock, Tag, Plus, Calendar } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useNavigate } from 'react-router';
@@ -29,6 +29,11 @@ export default function OrganizationPostingCreate() {
     reValidateMode: 'onChange',
     defaultValues: {
       automatic_acceptance: true,
+      allows_partial_attendance: false,
+      start_date: '',
+      start_time: '',
+      end_date: '',
+      end_time: '',
     },
   });
 
@@ -82,6 +87,7 @@ export default function OrganizationPostingCreate() {
         max_volunteers: data.max_volunteers ? Number(data.max_volunteers) : undefined,
         minimum_age: data.minimum_age ? Number(data.minimum_age) : undefined,
         automatic_acceptance: data.automatic_acceptance,
+        allows_partial_attendance: data.allows_partial_attendance,
         skills: skills.length > 0 ? skills : undefined,
         crisis_id: selectedCrisisId,
       };
@@ -188,7 +194,7 @@ export default function OrganizationPostingCreate() {
                           shouldTouch: true,
                           shouldValidate: true,
                         });
-                        form.setValue('end_date', to, {
+                        form.setValue('end_date', to || from, {
                           shouldDirty: true,
                           shouldTouch: true,
                           shouldValidate: true,
@@ -292,6 +298,28 @@ export default function OrganizationPostingCreate() {
                       description: 'Volunteers must be approved by the organization.',
                       Icon: Lock,
                       btnColor: 'btn-secondary',
+                    },
+                  ]}
+                />
+
+                <ToggleButton
+                  form={form}
+                  name="allows_partial_attendance"
+                  label="Attendance Commitment"
+                  options={[
+                    {
+                      value: true,
+                      label: 'Partial Attendance',
+                      description: 'Volunteers can choose specific days.',
+                      Icon: Calendar,
+                      btnColor: 'btn-info',
+                    },
+                    {
+                      value: false,
+                      label: 'Full Commitment',
+                      description: 'Volunteers must attend all dates.',
+                      Icon: Users,
+                      btnColor: 'btn-accent',
                     },
                   ]}
                 />

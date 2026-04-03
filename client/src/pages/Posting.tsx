@@ -61,9 +61,39 @@ import type {
   VolunteerPostingResponse,
 } from '../../../server/src/api/types.ts';
 import type { Crisis } from '../../../server/src/db/tables/index.ts';
-import type { PostingApplication, PostingEnrollment, PostingWithSkills } from '../../../server/src/types.ts';
+import type { PostingApplication, PostingEnrollment, PostingWithContext, PostingWithSkills } from '../../../server/src/types.ts';
+
+const parseDateOnlyParts = (value: string) => {
+  const datePart = value.split('T')[0] ?? '';
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(datePart);
+  if (!match) return null;
+
+  return {
+    year: Number(match[1]),
+    month: Number(match[2]),
+    day: Number(match[3]),
+  };
+};
+
+const normalizeDateOnlyValue = (value: string) => {
+  const dateParts = parseDateOnlyParts(value);
+  if (!dateParts) return '';
+
+  return `${dateParts.year}-${String(dateParts.month).padStart(2, '0')}-${String(dateParts.day).padStart(2, '0')}`;
+};
+
+const normalizeDateOnlyList = (values: string[]) => values
+  .map(normalizeDateOnlyValue)
+  .filter((value): value is string => Boolean(value));
 
 const getDateInputValue = (value: Date | string) => {
+  if (typeof value === 'string') {
+    const dateParts = parseDateOnlyParts(value);
+    if (dateParts) {
+      return `${dateParts.year}-${String(dateParts.month).padStart(2, '0')}-${String(dateParts.day).padStart(2, '0')}`;
+    }
+  }
+
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return '';
   const year = parsed.getUTCFullYear();
@@ -82,6 +112,16 @@ const getPostingStartDateTime = (posting: PostingWithSkills) => {
 
 const formatDisplayDate = (value?: string) => {
   if (!value) return '-';
+
+  const dateParts = parseDateOnlyParts(value);
+  if (dateParts) {
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    }).format(new Date(dateParts.year, dateParts.month - 1, dateParts.day));
+  }
+
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return value;
   return new Intl.DateTimeFormat('en-US', {
@@ -115,7 +155,7 @@ function PostingPage() {
   const organizationAccount = useOrganization();
   const account = isVolunteerView ? null : organizationAccount;
 
-  const [posting, setPosting] = useState<PostingWithSkills | null>(null);
+  const [posting, setPosting] = useState<PostingWithSkills | PostingWithContext | null>(null);
   const [enrollments, setEnrollments] = useState<PostingEnrollment[]>([]);
   const [applications, setApplications] = useState<PostingApplication[]>([]);
   const [hasPendingApplication, setHasPendingApplication] = useState(false);
@@ -133,6 +173,8 @@ function PostingPage() {
   const [withdrawing, setWithdrawing] = useState(false);
   const [processingApplicationId, setProcessingApplicationId] = useState<number | null>(null);
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
+  const [selectedApplicationDates, setSelectedApplicationDates] = useState<string[]>([]);
+  const [postingDates, setPostingDates] = useState<string[]>([]);
   const [isEditMode, setIsEditMode] = useState(false);
   const [postingEnrollmentCount, setPostingEnrollmentCount] = useState(0);
   const [postingOrganization, setPostingOrganization] = useState<{ id: number; name: string; logoPath?: string | null } | null>(null);
@@ -256,6 +298,7 @@ function PostingPage() {
       setHasPendingApplication(postingResponse.posting.application_status === 'pending');
       setIsEnrolled(postingResponse.posting.application_status === 'registered');
       setPostingEnrollmentCount(postingResponse.posting.enrollment_count);
+      setPostingDates(normalizeDateOnlyList(postingResponse.posting_dates ?? []));
       setSkills(postingResponse.posting.skills.map(s => s.name));
       setSelectedCrisisId(postingResponse.posting.crisis_id ?? undefined);
       setPosition([
@@ -410,10 +453,11 @@ function PostingPage() {
   );
 
   const { trigger: applyToPosting } = useAsync(
-    async (postingId: string, message?: string) => requestServer(`/volunteer/posting/${postingId}/enroll`, {
+    async (postingId: string, message?: string, dates?: string[]) => requestServer(`/volunteer/posting/${postingId}/enroll`, {
       method: 'POST',
       body: {
         message,
+        dates,
       },
       includeJwt: true,
     }),
@@ -560,20 +604,34 @@ function PostingPage() {
 
   const closeApplyModal = useCallback(() => {
     setIsApplyModalOpen(false);
+    setSelectedApplicationDates([]);
   }, []);
 
   const openApplyModal = useCallback(() => {
     if (!id || hasPendingApplication || isEnrolled) return;
+    setSelectedApplicationDates([]);
     setIsApplyModalOpen(true);
   }, [id, hasPendingApplication, isEnrolled]);
 
   const submitApplication = useCallback(async (message?: string) => {
-    if (!id || hasPendingApplication || isEnrolled) return;
+    if (!id || hasPendingApplication || isEnrolled || !posting) return;
+
+    if (posting.allows_partial_attendance) {
+      if (selectedApplicationDates.length === 0) {
+        notifications.push({ type: 'error', message: 'Please select at least one date to apply.' });
+        return;
+      }
+
+      if (selectedApplicationDates.length >= postingDates.length) {
+        notifications.push({ type: 'error', message: 'For partial attendance, select fewer than all dates.' });
+        return;
+      }
+    }
 
     try {
       setApplying(true);
 
-      await applyToPosting(id, message);
+      await applyToPosting(id, message, posting.allows_partial_attendance ? selectedApplicationDates : undefined);
 
       setHasPendingApplication(true);
       setIsApplyModalOpen(false);
@@ -586,15 +644,16 @@ function PostingPage() {
     } finally {
       setApplying(false);
     }
-  }, [applyToPosting, id, hasPendingApplication, isEnrolled, notifications, loadPosting]);
+  }, [applyToPosting, id, hasPendingApplication, isEnrolled, notifications, loadPosting, posting, postingDates, selectedApplicationDates]);
 
   const withdrawApplication = useCallback(async () => {
     if (!id || (!hasPendingApplication && !isEnrolled)) return;
-    if (!confirm(isEnrolled ? 'Are you sure you want to leave this position?' : 'Are you sure you want to withdraw your application?')) return;
+
+    const withdrawConfirmed = confirm(isEnrolled ? 'Are you sure you want to leave this position?' : 'Are you sure you want to withdraw your application?');
+    if (!withdrawConfirmed) return;
 
     try {
       setWithdrawing(true);
-
       await withdrawFromPosting(id);
 
       setHasPendingApplication(false);
@@ -770,7 +829,20 @@ function PostingPage() {
         onClose={closeApplyModal}
         onSubmit={submitApplication}
         placeholder="You can add an optional message to tell the organization why you're interested in this opportunity"
-      />
+      >
+        {posting?.allows_partial_attendance && (
+          <div className="mt-3 border border-base-200 rounded-lg p-3 bg-base-100">
+            <p className="text-sm font-medium mb-2">Select your available days (partial attendance)</p>
+            <CalendarInfo
+              selectionMode="multiple"
+              selectedDates={selectedApplicationDates}
+              onSelectedDatesChange={setSelectedApplicationDates}
+              allowedDates={postingDates}
+            />
+            <p className="text-xs text-muted mt-2">You must select at least one day and fewer than all days.</p>
+          </div>
+        )}
+      </CustomMessageModal>
 
       <PageHeader
         title="Posting Details"
@@ -1119,28 +1191,53 @@ function PostingPage() {
             >
               {isEditMode
                 ? (
-                    <ToggleButton
-                      form={form}
-                      name="automatic_acceptance"
-                      label="Posting Type"
-                      disabled={saving}
-                      options={[
-                        {
-                          value: true,
-                          label: 'Open Posting',
-                          description: 'Volunteers are accepted automatically.',
-                          Icon: LockOpen,
-                          btnColor: 'btn-primary',
-                        },
-                        {
-                          value: false,
-                          label: 'Review-Based',
-                          description: 'Volunteers must be approved by the organization.',
-                          Icon: Lock,
-                          btnColor: 'btn-secondary',
-                        },
-                      ]}
-                    />
+                    <>
+                      <ToggleButton
+                        form={form}
+                        name="automatic_acceptance"
+                        label="Posting Type"
+                        disabled={saving}
+                        options={[
+                          {
+                            value: true,
+                            label: 'Open Posting',
+                            description: 'Volunteers are accepted automatically.',
+                            Icon: LockOpen,
+                            btnColor: 'btn-primary',
+                          },
+                          {
+                            value: false,
+                            label: 'Review-Based',
+                            description: 'Volunteers must be approved by the organization.',
+                            Icon: Lock,
+                            btnColor: 'btn-secondary',
+                          },
+                        ]}
+                      />
+
+                      <ToggleButton
+                        form={form}
+                        name="allows_partial_attendance"
+                        label="Attendance Commitment"
+                        disabled={saving || !!posting}
+                        options={[
+                          {
+                            value: true,
+                            label: 'Partial Attendance',
+                            description: 'Volunteers can choose specific days.',
+                            Icon: Calendar,
+                            btnColor: 'btn-info',
+                          },
+                          {
+                            value: false,
+                            label: 'Full Commitment',
+                            description: 'Volunteers must attend all dates.',
+                            Icon: Users,
+                            btnColor: 'btn-accent',
+                          },
+                        ]}
+                      />
+                    </>
                   )
                 : (
                     <span className={`badge gap-2 ${posting?.is_closed ? 'badge-error' : isOpen ? 'badge-primary' : 'badge-secondary'}`}>
@@ -1173,6 +1270,16 @@ function PostingPage() {
           </>
         )}
       >
+        {isVolunteerView && (
+          <Card
+            title={posting?.allows_partial_attendance ? 'Partial attendance' : 'Full commitment'}
+            description={posting?.allows_partial_attendance
+              ? 'Choose specific days to apply to and attend, you do not have to attend all days'
+              : 'You must attend all days when you apply'}
+            Icon={Calendar}
+          />
+        )}
+
         {isVolunteerView && (
           <Card
             title="Application Status"
