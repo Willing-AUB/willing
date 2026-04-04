@@ -260,7 +260,7 @@ function GuidePage() {
             </div>
           </div>
 
-          <section className="relative rounded-3xl bg-base-100 p-10 text-base-content overflow-hidden mb-14">
+          <section className="relative rounded-3xl bg-base-100 p-10 text-base-content overflow-hidden mb-10">
             <div className="absolute inset-0 opacity-12">
               <Heart className="absolute top-8 left-8 text-primary" size={42} />
               <ShieldCheck className="absolute top-16 right-12 text-secondary" size={46} />
@@ -436,7 +436,7 @@ function GuidePage() {
             </div>
           </section>
 
-          <section className="py-12 grid gap-4 md:grid-cols-2">
+          <section className="py-12 grid gap-4 md:grid-cols-2 mb-10">
             <div className="rounded-2xl border border-base-300 bg-base-100 p-6 shadow-lg shadow-black/5 dark:border-neutral-700 dark:bg-neutral-950 dark:shadow-black/20">
               <h3 className="font-bold text-xl mb-2 text-base-content dark:text-white">Start volunteering today</h3>
               <p className="text-base-content/80 mb-4 dark:text-neutral-300">Find your first opportunity, apply, and start earning certificate hours.</p>
