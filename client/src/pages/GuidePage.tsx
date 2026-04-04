@@ -281,7 +281,7 @@ function GuidePage() {
             </div>
           </div>
 
-          <section className="relative rounded-3xl bg-base-100 p-10 text-base-content overflow-hidden mb-10">
+          <section className="relative rounded-3xl bg-base-100 p-10 text-base-content overflow-visible mb-10">
             <div className="absolute inset-0 opacity-12">
               <Heart className="absolute top-8 left-8 text-primary" size={42} />
               <ShieldCheck className="absolute top-16 right-12 text-secondary" size={46} />
@@ -289,7 +289,7 @@ function GuidePage() {
               <Send className="absolute bottom-16 right-32 text-indigo-400" size={30} />
             </div>
             <div className="relative z-10 max-w-4xl">
-              <h1 className="text-3xl md:text-5xl font-black mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              <h1 className="text-3xl md:text-5xl font-black leading-[1.1] pb-2 mb-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                 Your Complete Guide to Willing
               </h1>
               <p className="text-lg md:text-xl opacity-90 max-w-3xl mb-6">
