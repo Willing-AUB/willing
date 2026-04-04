@@ -1089,7 +1089,7 @@ describe('PUT /volunteer/profile', () => {
     const profileData: VolunteerProfileData = {
       volunteer: {
         id: volunteer.id,
-        first_name: 'Updated',
+        first_name: volunteer.first_name,
         last_name: volunteer.last_name,
         email: volunteer.email,
         date_of_birth: volunteer.date_of_birth,
@@ -1135,7 +1135,7 @@ describe('PUT /volunteer/profile', () => {
 
     expect(updatedVolunteer).not.toBeUndefined();
     expect(updatedVolunteer).toMatchObject({
-      first_name: 'Updated',
+      first_name: volunteer.first_name,
       description: 'Available evenings',
     });
 
