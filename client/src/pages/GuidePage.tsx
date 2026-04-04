@@ -331,13 +331,13 @@ function GuidePage() {
           <section id="postings" className="py-20 bg-base-100 rounded-3xl p-6 lg:p-10 mb-10">
             <h2 className="text-3xl font-black mb-8 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Postings Explained — Deep Dive</h2>
             <div className="grid gap-4 lg:grid-cols-3 mb-10">
-              <Card className="hover:shadow-lg transition border-l-4 border-primary" title="Open vs Review-Based" description="Postings that are open allow volunteers to be automatically accepted when they apply to a posting. Review-based postings require manual acceptance by the organization itself" Icon={Unlock} color="primary" padding>
+              <Card className="hover:shadow-lg transition border border-base-300 border-l border-primary" title="Open vs Review-Based" description="Postings that are open allow volunteers to be automatically accepted when they apply to a posting. Review-based postings require manual acceptance by the organization itself" Icon={Unlock} color="primary" padding>
                 <div className="badge badge-primary mb-2">Open / Review</div>
               </Card>
-              <Card className="hover:shadow-lg transition border-l-4 border-secondary" title="Partial vs Full" description="Partial commitment allows volunteers to select specific days that they wanna volunteer in and commit to. Full commitment means volunteers must commit to all days of the posting if they sign up to it" Icon={Users} color="secondary" padding>
+              <Card className="hover:shadow-lg transition border border-base-300 border-l border-secondary" title="Partial vs Full" description="Partial commitment allows volunteers to select specific days that they wanna volunteer in and commit to. Full commitment means volunteers must commit to all days of the posting if they sign up to it" Icon={Users} color="secondary" padding>
                 <div className="badge badge-secondary mb-2">Flexible Engagement</div>
               </Card>
-              <Card className="hover:shadow-lg transition border-l-4 border-accent" title="Closed Posting" description="Closed postings mean that the opportunity is no longer accepting new applications, but existing enrollments remain unaffected. Organizations can manually close postings" Icon={Lock} color="accent" padding>
+              <Card className="hover:shadow-lg transition border border-base-300 border-l border-accent" title="Closed Posting" description="Closed postings mean that the opportunity is no longer accepting new applications, but existing enrollments remain unaffected. Organizations can manually close postings" Icon={Lock} color="accent" padding>
                 <div className="badge badge-accent mb-2">No Longer Accepting</div>
               </Card>
             </div>
