@@ -437,16 +437,22 @@ function GuidePage() {
           </section>
 
           <section className="py-12 grid gap-4 md:grid-cols-2 mb-10">
-            <div className="rounded-2xl border border-base-300 bg-base-100 p-6 shadow-lg shadow-black/5 dark:border-neutral-700 dark:bg-neutral-950 dark:shadow-black/20">
-              <h3 className="font-bold text-xl mb-2 text-base-content dark:text-white">Start volunteering today</h3>
-              <p className="text-base-content/80 mb-4 dark:text-neutral-300">Find your first opportunity, apply, and start earning certificate hours.</p>
+            <Card
+              className="rounded-2xl shadow-lg shadow-black/5 dark:border-neutral-700 dark:bg-neutral-950 dark:shadow-black/20"
+              color="primary"
+              title="Start volunteering today"
+              description="Find your first opportunity, apply, and start earning certificate hours."
+            >
               <LinkButton to="/volunteer/create" color="primary">Get Started</LinkButton>
-            </div>
-            <div className="rounded-2xl border border-base-300 bg-base-100 p-6 shadow-lg shadow-black/5 dark:border-neutral-700 dark:bg-neutral-950 dark:shadow-black/20">
-              <h3 className="font-bold text-xl mb-2 text-base-content dark:text-white">Register your organization</h3>
-              <p className="text-base-content/80 mb-4 dark:text-neutral-300">Publish your first posting and start matching with local volunteers.</p>
+            </Card>
+            <Card
+              className="rounded-2xl shadow-lg shadow-black/5 dark:border-neutral-700 dark:bg-neutral-950 dark:shadow-black/20"
+              color="secondary"
+              title="Register your organization"
+              description="Publish your first posting and start matching with local volunteers."
+            >
               <LinkButton to="/organization/request" color="secondary">Register</LinkButton>
-            </div>
+            </Card>
           </section>
         </main>
       </div>
