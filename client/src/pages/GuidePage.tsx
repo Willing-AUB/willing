@@ -54,6 +54,11 @@ function GuidePage() {
   const [activeSection, setActiveSection] = useState('overview');
 
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'auto' });
+    setActiveSection('overview');
+  }, []);
+
+  useEffect(() => {
     const handleScroll = () => {
       const scrollY = window.scrollY + window.innerHeight * 0.3;
 
