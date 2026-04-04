@@ -227,7 +227,7 @@ function GuidePage() {
     <PageContainer>
       <LoggedOutNavbar />
       <div className="flex w-full gap-6">
-        <aside className="hidden lg:block sticky top-14 h-[calc(100vh-4.5rem)] overflow-y-auto shrink-0 w-64 rounded-2xl border border-base-300 bg-base-100 p-4 shadow-sm">
+        <aside className="hidden lg:block sticky top-14 h-[calc(100vh-4.5rem)] overflow-y-auto shrink-0 w-64 p-4">
           <h2 className="text-xs font-bold uppercase tracking-wider text-base-content/60 mb-3">Guide navigation</h2>
           <ul className="space-y-2">
             {sections.map(section => (
