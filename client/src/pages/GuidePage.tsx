@@ -24,7 +24,7 @@ import {
   UserPlus,
   type LucideIcon,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import Card from '../components/Card';
 import Footer from '../components/layout/Footer';
@@ -42,39 +42,60 @@ const sections = [
   { id: 'faq', label: 'FAQ' },
 ];
 
-function sectionScrollTo(id: string, setActiveSection: (id: string) => void) {
-  const el = document.getElementById(id);
-  if (el) {
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    setActiveSection(id);
-  }
-}
-
 function GuidePage() {
   const [activeSection, setActiveSection] = useState('overview');
+  const activeSectionRef = useRef('overview');
+  const rafIdRef = useRef<number | null>(null);
+
+  const sectionScrollTo = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      activeSectionRef.current = id;
+      setActiveSection(id);
+    }
+  };
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'auto' });
     setActiveSection('overview');
+    activeSectionRef.current = 'overview';
   }, []);
 
   useEffect(() => {
     const handleScroll = () => {
-      const scrollY = window.scrollY + window.innerHeight * 0.3;
-
-      let current = sections[0].id;
-      for (const section of sections) {
-        const el = document.getElementById(section.id);
-        if (el && el.getBoundingClientRect().top + window.scrollY <= scrollY) {
-          current = section.id;
-        }
+      if (rafIdRef.current !== null) {
+        return;
       }
-      setActiveSection(current);
+
+      rafIdRef.current = requestAnimationFrame(() => {
+        const scrollY = window.scrollY + window.innerHeight * 0.3;
+
+        let current = sections[0].id;
+        for (const section of sections) {
+          const el = document.getElementById(section.id);
+          if (el && el.getBoundingClientRect().top + window.scrollY <= scrollY) {
+            current = section.id;
+          }
+        }
+
+        if (current !== activeSectionRef.current) {
+          activeSectionRef.current = current;
+          setActiveSection(current);
+        }
+
+        rafIdRef.current = null;
+      });
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current);
+      }
+    };
   }, []);
 
   const timelineStepsVolunteer = useMemo(
@@ -234,7 +255,7 @@ function GuidePage() {
               <li key={section.id}>
                 <button
                   type="button"
-                  onClick={() => sectionScrollTo(section.id, setActiveSection)}
+                  onClick={() => sectionScrollTo(section.id)}
                   className={`w-full text-left py-2 px-3 rounded-lg text-sm transition cursor-pointer ${activeSection === section.id ? 'bg-gradient-to-r from-primary to-secondary text-white' : 'hover:bg-base-200 text-base-content'}`}
                 >
                   {section.label}
@@ -251,7 +272,7 @@ function GuidePage() {
                 <button
                   type="button"
                   key={`mobile-${section.id}`}
-                  onClick={() => sectionScrollTo(section.id, setActiveSection)}
+                  onClick={() => sectionScrollTo(section.id)}
                   className={`btn btn-xs rounded-full normal-case ${activeSection === section.id ? 'btn-primary' : 'btn-ghost'}`}
                 >
                   {section.label}
