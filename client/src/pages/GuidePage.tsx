@@ -188,7 +188,7 @@ function GuidePage() {
         <div className="lg:grid lg:grid-cols-12 lg:items-center">
           {isLeft
             ? (
-                <div className="lg:col-span-5 lg:text-right lg:pr-8">
+                <div className="lg:col-span-5 lg:text-right">
                   <Card className="inline-block max-w-lg hover:shadow-lg transition" padding>
                     <h3 className="font-bold text-lg mb-1">{step.title}</h3>
                     <p className="text-sm opacity-75">{step.description}</p>
@@ -211,7 +211,7 @@ function GuidePage() {
                 <div className="lg:col-span-5" />
               )
             : (
-                <div className="lg:col-span-5 lg:text-left lg:pl-8">
+                <div className="lg:col-span-5 lg:text-left">
                   <Card className="inline-block max-w-lg hover:shadow-lg transition" padding>
                     <h3 className="font-bold text-lg mb-1">{step.title}</h3>
                     <p className="text-sm opacity-75">{step.description}</p>
