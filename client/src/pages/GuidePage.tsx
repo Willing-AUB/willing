@@ -235,7 +235,7 @@ function GuidePage() {
                 <button
                   type="button"
                   onClick={() => sectionScrollTo(section.id, setActiveSection)}
-                  className={`w-full text-left py-2 px-3 rounded-lg text-sm transition ${activeSection === section.id ? 'bg-gradient-to-r from-primary to-secondary text-white' : 'hover:bg-base-200 text-base-content'}`}
+                  className={`w-full text-left py-2 px-3 rounded-lg text-sm transition cursor-pointer ${activeSection === section.id ? 'bg-gradient-to-r from-primary to-secondary text-white' : 'hover:bg-base-200 text-base-content'}`}
                 >
                   {section.label}
                 </button>
