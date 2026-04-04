@@ -869,6 +869,48 @@ async function seed() {
         is_closed: false,
       },
       {
+        organization_id: orgByName.get('Ajialouna')!,
+        crisis_id: undefined,
+        title: 'Community Storytelling Circle',
+        description: 'Lead a welcoming storytelling and conversation circle for women and youth in Saida. No prior experience is required and all ages are encouraged to participate.',
+        latitude: 33.3560,
+        longitude: 35.4950,
+        location_name: 'Saida Women\'s Centre',
+        max_volunteers: 12,
+        ...buildTemporalFields(`${nowYear}-03-12T16:00:00Z`, `${nowYear}-03-12T19:00:00Z`),
+        minimum_age: null,
+        automatic_acceptance: true,
+        is_closed: false,
+      },
+      {
+        organization_id: orgByName.get('Ajialouna')!,
+        crisis_id: undefined,
+        title: 'Youth Reading Circle',
+        description: 'Host a youth reading circle for students and pre-teens at the Saida library. All ages are welcome and no previous experience is needed.',
+        latitude: 33.3545,
+        longitude: 35.4960,
+        location_name: 'Saida Public Library',
+        max_volunteers: 14,
+        ...buildTemporalFields(`${nowYear}-03-22T10:00:00Z`, `${nowYear}-03-22T13:00:00Z`),
+        minimum_age: null,
+        automatic_acceptance: true,
+        is_closed: false,
+      },
+      {
+        organization_id: orgByName.get('Arz Community')!,
+        crisis_id: undefined,
+        title: 'Family Water Station Support',
+        description: 'Support a community water station in Tripoli by handing out water and refreshments to families. This shift is suitable for younger volunteers and focuses on friendly, helpful service.',
+        latitude: 34.4360,
+        longitude: 35.8335,
+        location_name: 'Tripoli Al-Akhdar Community Hub',
+        max_volunteers: 18,
+        ...buildTemporalFields(`${nowYear}-03-26T09:00:00Z`, `${nowYear}-03-26T13:00:00Z`),
+        minimum_age: null,
+        automatic_acceptance: true,
+        is_closed: false,
+      },
+      {
         organization_id: orgByName.get('Arz Community')!,
         crisis_id: crisisByName.get('Akkar Wildfires')!,
         title: 'Debris Clearance',
@@ -1048,6 +1090,36 @@ async function seed() {
     { posting_id: postingByTitle.get('Children\'s Art & Story Workshop')!, name: 'Child Engagement' },
     { posting_id: postingByTitle.get('Children\'s Art & Story Workshop')!, name: 'Art' },
     { posting_id: postingByTitle.get('Children\'s Art & Story Workshop')!, name: 'Patience' },
+
+    // Community Storytelling Circle
+    { posting_id: postingByTitle.get('Community Storytelling Circle')!, name: 'Communication' },
+    { posting_id: postingByTitle.get('Community Storytelling Circle')!, name: 'Storytelling' },
+    { posting_id: postingByTitle.get('Community Storytelling Circle')!, name: 'Community Engagement' },
+    { posting_id: postingByTitle.get('Community Storytelling Circle')!, name: 'Empathy' },
+
+    // Youth Reading Circle
+    { posting_id: postingByTitle.get('Youth Reading Circle')!, name: 'Storytelling' },
+    { posting_id: postingByTitle.get('Youth Reading Circle')!, name: 'Child Engagement' },
+    { posting_id: postingByTitle.get('Youth Reading Circle')!, name: 'Communication' },
+    { posting_id: postingByTitle.get('Youth Reading Circle')!, name: 'Patience' },
+
+    // Junior Sports Field Prep
+    { posting_id: postingByTitle.get('Junior Sports Field Prep')!, name: 'Line Marking' },
+    { posting_id: postingByTitle.get('Junior Sports Field Prep')!, name: 'Equipment Setup' },
+    { posting_id: postingByTitle.get('Junior Sports Field Prep')!, name: 'Teamwork' },
+    { posting_id: postingByTitle.get('Junior Sports Field Prep')!, name: 'Light Groundskeeping' },
+
+    // Family Water Station Support
+    { posting_id: postingByTitle.get('Family Water Station Support')!, name: 'Customer Service' },
+    { posting_id: postingByTitle.get('Family Water Station Support')!, name: 'Hydration Support' },
+    { posting_id: postingByTitle.get('Family Water Station Support')!, name: 'Teamwork' },
+    { posting_id: postingByTitle.get('Family Water Station Support')!, name: 'Community Support' },
+
+    // Youth Garden Helpers
+    { posting_id: postingByTitle.get('Youth Garden Helpers')!, name: 'Gardening' },
+    { posting_id: postingByTitle.get('Youth Garden Helpers')!, name: 'Light Groundskeeping' },
+    { posting_id: postingByTitle.get('Youth Garden Helpers')!, name: 'Teamwork' },
+    { posting_id: postingByTitle.get('Youth Garden Helpers')!, name: 'Community Support' },
 
     // Debris Clearance – Akkar Villages
     { posting_id: postingByTitle.get('Debris Clearance')!, name: 'Physical Stamina' },
