@@ -101,7 +101,7 @@ async function getFullSelectedDates(
     return [];
   }
 
-  const dateCounts = await trx
+  const enrollmentCounts = await trx
     .selectFrom('enrollment_date')
     .select([
       dateColumnAsIsoSql('enrollment_date.date').as('date'),
@@ -112,10 +112,32 @@ async function getFullSelectedDates(
     .groupBy('enrollment_date.date')
     .execute();
 
-  return dateCounts
-    .filter(row => Number(row.count ?? 0) >= maxVolunteers)
-    .map(row => row.date)
-    .filter((date): date is string => Boolean(date));
+  const applicationCounts = await trx
+    .selectFrom('enrollment_application_date')
+    .innerJoin('enrollment_application', 'enrollment_application.id', 'enrollment_application_date.application_id')
+    .select([
+      dateColumnAsIsoSql('enrollment_application_date.date').as('date'),
+      sql<number>`count(*)`.as('count'),
+    ])
+    .where('enrollment_application.posting_id', '=', postingId)
+    .where('enrollment_application_date.date', 'in', selectedDates.map(date => toUtcDateOnly(date)))
+    .groupBy('enrollment_application_date.date')
+    .execute();
+
+  const countsByDate = [...enrollmentCounts, ...applicationCounts]
+    .map((row) => {
+      const normalizedDate = normalizeStoredDate(row.date);
+      return normalizedDate ? [normalizedDate, Number(row.count)] as const : undefined;
+    })
+    .filter((entry): entry is readonly [string, number] => Boolean(entry))
+    .reduce<Record<string, number>>((acc, [date, count]) => {
+      acc[date] = (acc[date] ?? 0) + count;
+      return acc;
+    }, {});
+
+  return Object.entries(countsByDate)
+    .filter(([, count]) => count >= maxVolunteers)
+    .map(([date]) => date);
 }
 
 function calculateAge(dateOfBirth: string, at: Date = new Date()): number | null {
@@ -398,14 +420,41 @@ function createVolunteerPostingRouter(db: Kysely<Database>) {
       .groupBy('enrollment_date.date')
       .execute();
 
-    const date_capacity = Object.fromEntries(
-      dateCapacities
-        .map((row) => {
-          const normalizedDate = normalizeStoredDate(row.date);
-          return normalizedDate ? [normalizedDate, Number(row.count)] as const : undefined;
-        })
-        .filter((entry): entry is readonly [string, number] => Boolean(entry)),
-    );
+    const applicationDateCapacities = await db
+      .selectFrom('enrollment_application_date')
+      .innerJoin('enrollment_application', 'enrollment_application.id', 'enrollment_application_date.application_id')
+      .select([
+        dateColumnAsIsoSql('enrollment_application_date.date').as('date'),
+        sql<number>`count(*)`.as('count'),
+      ])
+      .where('enrollment_application.posting_id', '=', id)
+      .groupBy('enrollment_application_date.date')
+      .execute();
+
+    const confirmedCapacityMap = dateCapacities
+      .map((row) => {
+        const normalizedDate = normalizeStoredDate(row.date);
+        return normalizedDate ? [normalizedDate, Number(row.count)] as const : undefined;
+      })
+      .filter((entry): entry is readonly [string, number] => Boolean(entry))
+      .reduce<Record<string, number>>((acc, [date, count]) => {
+        acc[date] = (acc[date] ?? 0) + count;
+        return acc;
+      }, {});
+
+    const combinedCapacityMap = [...dateCapacities, ...applicationDateCapacities]
+      .map((row) => {
+        const normalizedDate = normalizeStoredDate(row.date);
+        return normalizedDate ? [normalizedDate, Number(row.count)] as const : undefined;
+      })
+      .filter((entry): entry is readonly [string, number] => Boolean(entry))
+      .reduce<Record<string, number>>((acc, [date, count]) => {
+        acc[date] = (acc[date] ?? 0) + count;
+        return acc;
+      }, {});
+
+    const date_capacity = combinedCapacityMap;
+    const confirmed_date_capacity = confirmedCapacityMap;
 
     const [enrollmentDates, applicationDates] = await Promise.all([
       db
@@ -443,6 +492,7 @@ function createVolunteerPostingRouter(db: Kysely<Database>) {
       posting: {
         ...postingWithContext,
         date_capacity,
+        confirmed_date_capacity,
       },
       enrolled_dates,
       selected_dates,
@@ -511,11 +561,6 @@ function createVolunteerPostingRouter(db: Kysely<Database>) {
       }
 
       selectedDates = Array.from(new Set(dates.map(d => d.trim())));
-
-      if (postingDateKeys.length > 0 && selectedDates.length === postingDateKeys.length) {
-        res.status(400);
-        throw new Error('For partial attendance, please select fewer than all event dates');
-      }
 
       const invalidDate = selectedDates.find(date => !postingDateKeys.includes(date));
       if (invalidDate) {

@@ -764,10 +764,31 @@ function PostingPage() {
 
   const fullPostingDates = useMemo(() => {
     if (!posting?.allows_partial_attendance) return [];
-    if (posting.max_volunteers == null) return [];
+    const maxVolunteers = posting.max_volunteers;
+    if (maxVolunteers == null) return [];
 
     const dateCapacity = 'date_capacity' in posting ? (posting.date_capacity ?? {}) : {};
-    return postingDates.filter(date => (dateCapacity[date] ?? 0) >= posting.max_volunteers!);
+    return postingDates.filter(date => (dateCapacity[date] ?? 0) >= maxVolunteers);
+  }, [posting, postingDates]);
+
+  const postingDateDetails = useMemo(() => {
+    if (!posting || !postingDates.length) return {};
+    const maxVolunteers = posting.max_volunteers;
+    if (maxVolunteers == null) return {};
+
+    const combinedCapacity = 'date_capacity' in posting ? (posting.date_capacity ?? {}) : {};
+    const confirmedCapacity = 'confirmed_date_capacity' in posting
+      ? (posting.confirmed_date_capacity ?? {})
+      : combinedCapacity;
+
+    return postingDates.reduce<Record<string, string>>((acc, date) => {
+      const confirmedEnrolled = confirmedCapacity[date] ?? 0;
+      const isFull = (combinedCapacity[date] ?? 0) >= maxVolunteers;
+      acc[date] = isFull
+        ? 'Full'
+        : `${confirmedEnrolled}/${maxVolunteers}`;
+      return acc;
+    }, {});
   }, [posting, postingDates]);
 
   const canOpenAttendancePage = useMemo(() => {
@@ -862,6 +883,7 @@ function PostingPage() {
               onSelectedDatesChange={setSelectedApplicationDates}
               allowedDates={postingDates}
               disabledDates={fullPostingDates}
+              dateDetails={postingDateDetails}
             />
             <p className="text-xs text-muted mt-2">You must select at least one available day. Full days are unavailable.</p>
           </div>
