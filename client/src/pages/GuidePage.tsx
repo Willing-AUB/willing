@@ -28,7 +28,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 import Card from '../components/Card';
 import Footer from '../components/layout/Footer';
-import LoggedOutNavbar from '../components/layout/navbars/LoggedOutNavbar';
+import UserNavbar from '../components/layout/navbars/UserNavbar';
 import PageContainer from '../components/layout/PageContainer';
 import LinkButton from '../components/LinkButton';
 
@@ -261,7 +261,7 @@ function GuidePage() {
 
   return (
     <main className="h-screen flex flex-col">
-      <LoggedOutNavbar />
+      <UserNavbar />
       <div ref={scrollContainerRef} className="overflow-y-scroll flex-1">
         <PageContainer>
           <div className="flex w-full gap-6">
