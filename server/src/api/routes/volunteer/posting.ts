@@ -634,7 +634,7 @@ function createVolunteerPostingRouter(db: Kysely<Database>) {
           throw new Error('This posting is closed and no longer accepting applications');
         }
 
-        if (lockedPosting.max_volunteers !== undefined && lockedPosting.max_volunteers !== null) {
+        if (!isPartial && lockedPosting.max_volunteers !== undefined && lockedPosting.max_volunteers !== null) {
           const enrollmentCountRow = await trx
             .selectFrom('enrollment')
             .select(sql<number>`count(enrollment.id)`.as('count'))
@@ -713,7 +713,7 @@ function createVolunteerPostingRouter(db: Kysely<Database>) {
           throw new Error('This posting is closed and no longer accepting applications');
         }
 
-        if (lockedPosting.max_volunteers !== undefined && lockedPosting.max_volunteers !== null) {
+        if (!isPartial && lockedPosting.max_volunteers !== undefined && lockedPosting.max_volunteers !== null) {
           const enrollmentCountRow = await trx
             .selectFrom('enrollment')
             .select(sql<number>`count(enrollment.id)`.as('count'))

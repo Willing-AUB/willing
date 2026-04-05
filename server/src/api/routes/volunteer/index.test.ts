@@ -1066,6 +1066,86 @@ describe('GET /volunteer/posting/:id selected partial dates', () => {
     expect(response.body.message).toBe('Selected date 2026-06-02 is already full');
   });
 
+  test('allows partial attendance enrollment when other dates are full but selected date is available', async () => {
+    const { token } = await createVolunteerAccount(transaction, { email: 'partial-available-date@example.com' });
+    const { volunteer: existingVolunteerA } = await createVolunteerAccount(transaction, { email: 'partial-available-date-A@example.com' });
+    const { volunteer: existingVolunteerB } = await createVolunteerAccount(transaction, { email: 'partial-available-date-B@example.com' });
+    const { organization } = await createOrganizationAccount(transaction, { email: 'partial-available-date-org@example.com' });
+
+    const posting = await transaction
+      .insertInto('organization_posting')
+      .values({
+        organization_id: organization.id,
+        title: 'Partial Available Day Event',
+        description: 'Should allow applying to another available date',
+        latitude: 33.9,
+        longitude: 35.5,
+        max_volunteers: 1,
+        start_date: new Date('2026-06-01T00:00:00.000Z'),
+        start_time: '09:00:00',
+        end_date: new Date('2026-06-03T00:00:00.000Z'),
+        end_time: '17:00:00',
+        minimum_age: 18,
+        automatic_acceptance: false,
+        is_closed: false,
+        allows_partial_attendance: true,
+        location_name: 'Test Location',
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow();
+
+    const existingEnrollmentA = await transaction
+      .insertInto('enrollment')
+      .values({
+        volunteer_id: existingVolunteerA.id,
+        posting_id: posting.id,
+        message: 'Day A enrollment',
+        attended: false,
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow();
+
+    await transaction
+      .insertInto('enrollment_date')
+      .values({
+        enrollment_id: existingEnrollmentA.id,
+        posting_id: posting.id,
+        date: new Date('2026-06-01T00:00:00.000Z'),
+        attended: false,
+      })
+      .execute();
+
+    const existingEnrollmentB = await transaction
+      .insertInto('enrollment')
+      .values({
+        volunteer_id: existingVolunteerB.id,
+        posting_id: posting.id,
+        message: 'Day B enrollment',
+        attended: false,
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow();
+
+    await transaction
+      .insertInto('enrollment_date')
+      .values({
+        enrollment_id: existingEnrollmentB.id,
+        posting_id: posting.id,
+        date: new Date('2026-06-02T00:00:00.000Z'),
+        attended: false,
+      })
+      .execute();
+
+    const response = await server
+      .post(`/volunteer/posting/${posting.id}/enroll`)
+      .set('Authorization', 'Bearer ' + token)
+      .send({ dates: ['2026-06-03'], message: 'Applying to available day' })
+      .expect(200);
+
+    expect(response.body.enrollment).toBeDefined();
+    expect(response.body.enrollment).toMatchObject({ posting_id: posting.id });
+  });
+
   test('rejects partial attendance enrollments without selected dates', async () => {
     const { token } = await createVolunteerAccount(transaction, { email: 'partial-no-dates@example.com' });
     const { organization } = await createOrganizationAccount(transaction, { email: 'partial-no-dates-org@example.com' });
