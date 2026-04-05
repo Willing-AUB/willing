@@ -854,10 +854,11 @@ function PostingPage() {
         submitting={applying}
         onClose={closeApplyModal}
         onSubmit={submitApplication}
+        title="Apply to posting"
         placeholder="You can add an optional message to tell the organization why you're interested in this opportunity"
       >
         {posting?.allows_partial_attendance && (
-          <div className="mt-3 border border-base-200 rounded-lg p-3 bg-base-100">
+          <div className="mt-3">
             <p className="text-sm font-medium mb-2">Select your available days (partial attendance)</p>
             <CalendarInfo
               selectionMode="multiple"

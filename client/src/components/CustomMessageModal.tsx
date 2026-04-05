@@ -87,7 +87,7 @@ function CustomMessageModal({
           </div>
 
           {children && (
-            <div className="mt-3">
+            <div className="mt-4 pt-4 border-t border-base-200">
               {children}
             </div>
           )}
