@@ -151,5 +151,78 @@ describe('Organization posting applications', () => {
       '2026-07-03',
     ]);
     expect(enrollmentDates.every(row => row.attended === false)).toBe(true);
+
+    const remainingApplicationDates = await transaction
+      .selectFrom('enrollment_application_date')
+      .select('id')
+      .where('application_id', '=', application.id)
+      .execute();
+
+    expect(remainingApplicationDates).toEqual([]);
+  });
+
+  test('rejecting a review-based partial application deletes its requested dates', async () => {
+    const { organization, token } = await createOrganizationAccount(transaction, { email: 'org-posting-reject@example.com' });
+    const { volunteer } = await createVolunteerAccount(transaction, { email: 'vol-posting-reject@example.com' });
+
+    const posting = await transaction
+      .insertInto('organization_posting')
+      .values({
+        organization_id: organization.id,
+        title: 'Review Partial Attendance Rejection',
+        description: 'Reject requested dates cleanly',
+        latitude: 33.9,
+        longitude: 35.5,
+        max_volunteers: 20,
+        start_date: new Date('2026-08-01T00:00:00.000Z'),
+        start_time: '09:00:00',
+        end_date: new Date('2026-08-03T00:00:00.000Z'),
+        end_time: '17:00:00',
+        minimum_age: 18,
+        automatic_acceptance: false,
+        is_closed: false,
+        allows_partial_attendance: true,
+        location_name: 'Test Location',
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow();
+
+    const application = await transaction
+      .insertInto('enrollment_application')
+      .values({
+        volunteer_id: volunteer.id,
+        posting_id: posting.id,
+        message: 'Available on selected days',
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow();
+
+    await transaction
+      .insertInto('enrollment_application_date')
+      .values([
+        { application_id: application.id, date: new Date('2026-08-01T00:00:00.000Z') },
+        { application_id: application.id, date: new Date('2026-08-03T00:00:00.000Z') },
+      ])
+      .execute();
+
+    await server
+      .delete(`/organization/posting/${posting.id}/applications/${application.id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    const remainingApp = await transaction
+      .selectFrom('enrollment_application')
+      .select('id')
+      .where('id', '=', application.id)
+      .executeTakeFirst();
+
+    const remainingDates = await transaction
+      .selectFrom('enrollment_application_date')
+      .select('id')
+      .where('application_id', '=', application.id)
+      .execute();
+
+    expect(remainingApp).toBeUndefined();
+    expect(remainingDates).toEqual([]);
   });
 });

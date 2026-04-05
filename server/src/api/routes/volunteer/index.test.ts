@@ -19,6 +19,8 @@ import type TestAgent from 'supertest/lib/agent.js';
 let transaction: ControlledTransaction<Database>;
 let server: TestAgent;
 
+const formatDateToIso = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
 const generateJWTSpy = vi
   .spyOn(jwtService, 'generateJWT');
 const sendVolunteerVerificationEmailSpy = vi
@@ -856,6 +858,64 @@ describe('GET /volunteer/posting/:id selected partial dates', () => {
     expect(response.body.selected_dates).toEqual(['2026-05-10', '2026-05-12']);
   });
 
+  test('returns enrolled_dates after a review-based partial application is accepted', async () => {
+    const { token } = await createVolunteerAccount(transaction, { email: 'partial-accepted-selected@example.com' });
+    const { organization, token: orgToken } = await createOrganizationAccount(transaction, { email: 'partial-accepted-selected-org@example.com' });
+
+    const posting = await transaction
+      .insertInto('organization_posting')
+      .values({
+        organization_id: organization.id,
+        title: 'Accepted Partial Attendance Event',
+        description: 'Accepted partial attendance should surface enrolled dates',
+        latitude: 33.9,
+        longitude: 35.5,
+        max_volunteers: 20,
+        start_date: new Date('2026-07-10T00:00:00.000Z'),
+        start_time: '09:00:00',
+        end_date: new Date('2026-07-12T00:00:00.000Z'),
+        end_time: '17:00:00',
+        minimum_age: 18,
+        automatic_acceptance: false,
+        is_closed: false,
+        allows_partial_attendance: true,
+        location_name: 'Test Location',
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow();
+
+    await server
+      .post(`/volunteer/posting/${posting.id}/enroll`)
+      .set('Authorization', 'Bearer ' + token)
+      .send({ dates: ['2026-07-10', '2026-07-12'], message: 'Apply for review-based partial attendance' })
+      .expect(200);
+
+    const application = await transaction
+      .selectFrom('enrollment_application')
+      .select('id')
+      .where('posting_id', '=', posting.id)
+      .where('volunteer_id', '=', (await transaction
+        .selectFrom('volunteer_account')
+        .select('id')
+        .where('email', '=', 'partial-accepted-selected@example.com')
+        .executeTakeFirstOrThrow()).id)
+      .executeTakeFirstOrThrow();
+
+    await server
+      .post(`/organization/posting/${posting.id}/applications/${application.id}/accept`)
+      .set('Authorization', 'Bearer ' + orgToken)
+      .expect(200);
+
+    const response = await server
+      .get(`/volunteer/posting/${posting.id}`)
+      .set('Authorization', 'Bearer ' + token)
+      .expect(200);
+
+    expect(response.body.posting.application_status).toBe('registered');
+    expect(response.body.enrolled_dates).toEqual(['2026-07-10', '2026-07-12']);
+    expect(response.body.selected_dates).toEqual(['2026-07-10', '2026-07-12']);
+  });
+
   test('returns posting_dates including the end date', async () => {
     const { token } = await createVolunteerAccount(transaction, { email: 'partial-posting-dates@example.com' });
     const { organization } = await createOrganizationAccount(transaction, { email: 'partial-posting-dates-org@example.com' });
@@ -947,6 +1007,258 @@ describe('GET /volunteer/posting/:id selected partial dates', () => {
       .expect(403);
 
     expect(response.body.message).toBe('Selected date 2026-06-02 is already full');
+  });
+
+  test('rejects a partial attendance enrollment when one selected date is full and another is available', async () => {
+    const { token } = await createVolunteerAccount(transaction, { email: 'partial-mixed-capacity@example.com' });
+    const { volunteer: existingVolunteer } = await createVolunteerAccount(transaction, { email: 'partial-mixed-capacity-existing@example.com' });
+    const { organization } = await createOrganizationAccount(transaction, { email: 'partial-mixed-capacity-org@example.com' });
+
+    const posting = await transaction
+      .insertInto('organization_posting')
+      .values({
+        organization_id: organization.id,
+        title: 'Mixed Capacity Partial Event',
+        description: 'Mixed date capacity should reject only the full date',
+        latitude: 33.9,
+        longitude: 35.5,
+        max_volunteers: 1,
+        start_date: new Date('2026-06-01T00:00:00.000Z'),
+        start_time: '09:00:00',
+        end_date: new Date('2026-06-03T00:00:00.000Z'),
+        end_time: '17:00:00',
+        minimum_age: 18,
+        automatic_acceptance: false,
+        is_closed: false,
+        allows_partial_attendance: true,
+        location_name: 'Test Location',
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow();
+
+    const existingEnrollment = await transaction
+      .insertInto('enrollment')
+      .values({
+        volunteer_id: existingVolunteer.id,
+        posting_id: posting.id,
+        message: 'Already assigned to one day',
+        attended: false,
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow();
+
+    await transaction
+      .insertInto('enrollment_date')
+      .values({
+        enrollment_id: existingEnrollment.id,
+        posting_id: posting.id,
+        date: new Date('2026-06-02T00:00:00.000Z'),
+        attended: false,
+      })
+      .execute();
+
+    const response = await server
+      .post(`/volunteer/posting/${posting.id}/enroll`)
+      .set('Authorization', 'Bearer ' + token)
+      .send({ dates: ['2026-06-02', '2026-06-03'], message: 'Mixed availability attempt' })
+      .expect(403);
+
+    expect(response.body.message).toBe('Selected date 2026-06-02 is already full');
+  });
+
+  test('rejects partial attendance enrollments without selected dates', async () => {
+    const { token } = await createVolunteerAccount(transaction, { email: 'partial-no-dates@example.com' });
+    const { organization } = await createOrganizationAccount(transaction, { email: 'partial-no-dates-org@example.com' });
+
+    const posting = await transaction
+      .insertInto('organization_posting')
+      .values({
+        organization_id: organization.id,
+        title: 'Partial Attendance Missing Dates',
+        description: 'Dates required for partial attendance',
+        latitude: 33.9,
+        longitude: 35.5,
+        max_volunteers: 10,
+        start_date: new Date('2026-06-01T00:00:00.000Z'),
+        start_time: '09:00:00',
+        end_date: new Date('2026-06-03T00:00:00.000Z'),
+        end_time: '17:00:00',
+        minimum_age: 18,
+        automatic_acceptance: false,
+        is_closed: false,
+        allows_partial_attendance: true,
+        location_name: 'Test Location',
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow();
+
+    const response = await server
+      .post(`/volunteer/posting/${posting.id}/enroll`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ message: 'No dates selected' })
+      .expect(400);
+
+    expect(response.body.message).toBe('You must select at least one date when partial attendance is enabled');
+  });
+
+  test('rejects partial attendance enrollments when selected date is outside the posting range', async () => {
+    const { token } = await createVolunteerAccount(transaction, { email: 'partial-outside-date@example.com' });
+    const { organization } = await createOrganizationAccount(transaction, { email: 'partial-outside-date-org@example.com' });
+
+    const posting = await transaction
+      .insertInto('organization_posting')
+      .values({
+        organization_id: organization.id,
+        title: 'Partial Attendance Out of Range',
+        description: 'Selected date must be within range',
+        latitude: 33.9,
+        longitude: 35.5,
+        max_volunteers: 10,
+        start_date: new Date('2026-06-01T00:00:00.000Z'),
+        start_time: '09:00:00',
+        end_date: new Date('2026-06-03T00:00:00.000Z'),
+        end_time: '17:00:00',
+        minimum_age: 18,
+        automatic_acceptance: false,
+        is_closed: false,
+        allows_partial_attendance: true,
+        location_name: 'Test Location',
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow();
+
+    const response = await server
+      .post(`/volunteer/posting/${posting.id}/enroll`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ dates: ['2026-06-04'], message: 'Out of range date' })
+      .expect(400);
+
+    expect(response.body.message).toBe('Selected date 2026-06-04 is outside the posting date range');
+  });
+
+  test('rejects date selection for full commitment postings', async () => {
+    const { token } = await createVolunteerAccount(transaction, { email: 'full-commitment-dates@example.com' });
+    const { organization } = await createOrganizationAccount(transaction, { email: 'full-commitment-dates-org@example.com' });
+
+    const posting = await transaction
+      .insertInto('organization_posting')
+      .values({
+        organization_id: organization.id,
+        title: 'Full Commitment Event',
+        description: 'Dates cannot be selected for full-commitment postings',
+        latitude: 33.9,
+        longitude: 35.5,
+        max_volunteers: 10,
+        start_date: new Date('2026-06-01T00:00:00.000Z'),
+        start_time: '09:00:00',
+        end_date: new Date('2026-06-03T00:00:00.000Z'),
+        end_time: '17:00:00',
+        minimum_age: 18,
+        automatic_acceptance: true,
+        is_closed: false,
+        allows_partial_attendance: false,
+        location_name: 'Test Location',
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow();
+
+    const response = await server
+      .post(`/volunteer/posting/${posting.id}/enroll`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ dates: ['2026-06-01'], message: 'Should be rejected' })
+      .expect(400);
+
+    expect(response.body.message).toBe('This posting requires full commitment; date selection is not allowed');
+  });
+
+  test('deduplicates duplicate selected dates for partial attendance enrollments', async () => {
+    const { token } = await createVolunteerAccount(transaction, { email: 'partial-duplicate-dates@example.com' });
+    const { organization } = await createOrganizationAccount(transaction, { email: 'partial-duplicate-dates-org@example.com' });
+
+    const posting = await transaction
+      .insertInto('organization_posting')
+      .values({
+        organization_id: organization.id,
+        title: 'Duplicate Selected Dates Event',
+        description: 'Duplicate selected dates should be normalized',
+        latitude: 33.9,
+        longitude: 35.5,
+        max_volunteers: 10,
+        start_date: new Date('2026-06-10T00:00:00.000Z'),
+        start_time: '09:00:00',
+        end_date: new Date('2026-06-12T00:00:00.000Z'),
+        end_time: '17:00:00',
+        minimum_age: 18,
+        automatic_acceptance: true,
+        is_closed: false,
+        allows_partial_attendance: true,
+        location_name: 'Test Location',
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow();
+
+    const enrollResponse = await server
+      .post(`/volunteer/posting/${posting.id}/enroll`)
+      .set('Authorization', 'Bearer ' + token)
+      .send({ dates: ['2026-06-11', '2026-06-11'], message: 'Duplicate dates should be deduped' })
+      .expect(200);
+
+    const enrollment = enrollResponse.body.enrollment;
+    expect(enrollment).toBeDefined();
+
+    const dates = await transaction
+      .selectFrom('enrollment_date')
+      .select(['date'])
+      .where('enrollment_id', '=', enrollment.id)
+      .orderBy('date', 'asc')
+      .execute();
+
+    expect(dates.map(row => formatDateToIso(row.date))).toEqual(['2026-06-11']);
+  });
+
+  test('creates enrollment_date rows for auto-accepted partial attendance enrollments', async () => {
+    const { token } = await createVolunteerAccount(transaction, { email: 'partial-auto-accept@example.com' });
+    const { organization } = await createOrganizationAccount(transaction, { email: 'partial-auto-accept-org@example.com' });
+
+    const posting = await transaction
+      .insertInto('organization_posting')
+      .values({
+        organization_id: organization.id,
+        title: 'Auto Accept Partial Attendance Event',
+        description: 'Auto accepted partial attendance should store selected dates',
+        latitude: 33.9,
+        longitude: 35.5,
+        max_volunteers: 10,
+        start_date: new Date('2026-06-10T00:00:00.000Z'),
+        start_time: '09:00:00',
+        end_date: new Date('2026-06-12T00:00:00.000Z'),
+        end_time: '17:00:00',
+        minimum_age: 18,
+        automatic_acceptance: true,
+        is_closed: false,
+        allows_partial_attendance: true,
+        location_name: 'Test Location',
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow();
+
+    const enrollResponse = await server
+      .post(`/volunteer/posting/${posting.id}/enroll`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ dates: ['2026-06-10', '2026-06-12'], message: 'Enroll with selected dates' })
+      .expect(200);
+
+    const enrollment = enrollResponse.body.enrollment;
+    expect(enrollment).toBeDefined();
+
+    const dates = await transaction
+      .selectFrom('enrollment_date')
+      .select(['date'])
+      .where('enrollment_id', '=', enrollment.id)
+      .orderBy('date', 'asc')
+      .execute();
+
+    expect(dates.map(row => formatDateToIso(row.date))).toEqual(['2026-06-10', '2026-06-12']);
   });
 });
 
