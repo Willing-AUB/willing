@@ -624,11 +624,6 @@ function PostingPage() {
         notifications.push({ type: 'error', message: 'Please select at least one date to apply.' });
         return;
       }
-
-      if (selectedApplicationDates.length >= postingDates.length) {
-        notifications.push({ type: 'error', message: 'For partial attendance, select fewer than all dates.' });
-        return;
-      }
     }
 
     try {
@@ -867,7 +862,7 @@ function PostingPage() {
               allowedDates={postingDates}
               disabledDates={fullPostingDates}
             />
-            <p className="text-xs text-muted mt-2">You must select at least one day and fewer than all days. Full days are unavailable.</p>
+            <p className="text-xs text-muted mt-2">You must select at least one available day. Full days are unavailable.</p>
           </div>
         )}
       </CustomMessageModal>
