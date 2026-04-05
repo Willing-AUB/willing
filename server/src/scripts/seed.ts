@@ -173,6 +173,19 @@ async function seed() {
         certificate_info_id: bekaaUpliftCertificateInfo.id,
         password: passwordHash,
       },
+      {
+        name: 'Scam Organization',
+        email: 'org6@willing.com',
+        phone_number: '+96199990000',
+        url: 'https://scam-organization.example.com',
+        latitude: 33.5000,
+        longitude: 35.5000,
+        location_name: 'Test Beirut',
+        description: 'Fraudulent organization seeded for manual reporting and disable-account testing.',
+        logo_path: 'org-logos/scam-organization.png',
+        certificate_info_id: bekaaUpliftCertificateInfo.id,
+        password: passwordHash,
+      },
     ])
     .returning(['id', 'name'])
     .execute();
@@ -341,6 +354,15 @@ async function seed() {
         date_of_birth: '2000-03-27',
         description: 'Patient and dependable volunteer with experience in admin support and event coordination.',
       },
+      {
+        first_name: 'Scam',
+        last_name: 'Volunteer',
+        email: 'vol15@willing.com',
+        password: passwordHash,
+        gender: 'other',
+        date_of_birth: '1998-12-12',
+        description: 'Seeded test volunteer for reporting and account disable scenarios.',
+      },
     ].map(volunteer => ({
       ...volunteer,
       gender: volunteer.gender as 'male' | 'female' | 'other',
@@ -349,6 +371,108 @@ async function seed() {
     .execute();
 
   const volByEmail = new Map(volunteers.map(v => [v.email, v.id]));
+
+  await database.insertInto('organization_report').values([
+    {
+      reported_organization_id: orgByName.get('Scam Organization')!,
+      reporter_volunteer_id: volByEmail.get('vol1@willing.com')!,
+      title: 'scam',
+      message: 'Claimed to be a legitimate nonprofit but provided fake credentials and payment requests.',
+    },
+    {
+      reported_organization_id: orgByName.get('Scam Organization')!,
+      reporter_volunteer_id: volByEmail.get('vol2@willing.com')!,
+      title: 'impersonation',
+      message: 'Operated under a convincing but fraudulent brand name and solicited volunteers dishonestly.',
+    },
+    {
+      reported_organization_id: orgByName.get('Nour Relief')!,
+      reporter_volunteer_id: volByEmail.get('vol3@willing.com')!,
+      title: 'harassment',
+      message: 'Overseers used intimidating language and blamed volunteers for issues outside their control.',
+    },
+    {
+      reported_organization_id: orgByName.get('Cedar Response')!,
+      reporter_volunteer_id: volByEmail.get('vol4@willing.com')!,
+      title: 'other',
+      message: 'Committed to providing a proper volunteer orientation but repeatedly postponed and canceled sessions.',
+    },
+    {
+      reported_organization_id: orgByName.get('Ajialouna')!,
+      reporter_volunteer_id: volByEmail.get('vol5@willing.com')!,
+      title: 'inappropriate_behavior',
+      message: 'Asked volunteers to perform unsafe tasks without proper protective equipment.',
+    },
+    {
+      reported_organization_id: orgByName.get('Arz Community')!,
+      reporter_volunteer_id: volByEmail.get('vol6@willing.com')!,
+      title: 'other',
+      message: 'Provided inaccurate location details and caused confusion during volunteer transport planning.',
+    },
+    {
+      reported_organization_id: orgByName.get('Bekaa Uplift')!,
+      reporter_volunteer_id: volByEmail.get('vol7@willing.com')!,
+      title: 'scam',
+      message: 'Asked volunteers to pay a registration fee despite the platform policy against it.',
+    },
+    {
+      reported_organization_id: orgByName.get('Cedar Response')!,
+      reporter_volunteer_id: volByEmail.get('vol8@willing.com')!,
+      title: 'impersonation',
+      message: 'Claimed staff were certified when they had no verified credentials.',
+    },
+  ]).execute();
+
+  await database.insertInto('volunteer_report').values([
+    {
+      reported_volunteer_id: volByEmail.get('vol15@willing.com')!,
+      reporter_organization_id: orgByName.get('Nour Relief')!,
+      title: 'scam',
+      message: 'Volunteer attempted to collect funds from our community contacts using false statements.',
+    },
+    {
+      reported_volunteer_id: volByEmail.get('vol15@willing.com')!,
+      reporter_organization_id: orgByName.get('Cedar Response')!,
+      title: 'inappropriate_behavior',
+      message: 'Exhibited rude and unprofessional behavior during onboarding calls and site visits.',
+    },
+    {
+      reported_volunteer_id: volByEmail.get('vol5@willing.com')!,
+      reporter_organization_id: orgByName.get('Ajialouna')!,
+      title: 'impersonation',
+      message: 'Misrepresented availability and qualifications during onboarding calls.',
+    },
+    {
+      reported_volunteer_id: volByEmail.get('vol6@willing.com')!,
+      reporter_organization_id: orgByName.get('Arz Community')!,
+      title: 'harassment',
+      message: 'Used aggressive language with staff and other volunteers during a shift.',
+    },
+    {
+      reported_volunteer_id: volByEmail.get('vol9@willing.com')!,
+      reporter_organization_id: orgByName.get('Bekaa Uplift')!,
+      title: 'other',
+      message: 'Missed a confirmed shift and did not respond to several scheduling messages.',
+    },
+    {
+      reported_volunteer_id: volByEmail.get('vol10@willing.com')!,
+      reporter_organization_id: orgByName.get('Cedar Response')!,
+      title: 'harassment',
+      message: 'Raised their voice at our staff during a debrief for no valid reason.',
+    },
+    {
+      reported_volunteer_id: volByEmail.get('vol11@willing.com')!,
+      reporter_organization_id: orgByName.get('Ajialouna')!,
+      title: 'scam',
+      message: 'Repeatedly offered unauthorized services to community members and requested personal details.',
+    },
+    {
+      reported_volunteer_id: volByEmail.get('vol12@willing.com')!,
+      reporter_organization_id: orgByName.get('Arz Community')!,
+      title: 'other',
+      message: 'Arrived without required paperwork and declined to complete intake forms when asked.',
+    },
+  ]).execute();
 
   // ─── Crises ───────────────────────────────────────────────────────────────────
 
@@ -1796,10 +1920,10 @@ async function seed() {
   console.log('Admin:');
   console.log('  admin@willing.com');
   console.log('');
-  console.log('Organizations (approved): org1@willing.com, org2@willing.com, org3@willing.com, org4@willing.com, org5@willing.com');
+  console.log('Organizations (approved): org1@willing.com, org2@willing.com, org3@willing.com, org4@willing.com, org5@willing.com, org6@willing.com (scam)');
 
   console.log('');
-  console.log('Volunteers: vol1@willing.com, vol2@willing.com, vol3@willing.com, vol4@willing.com, vol5@willing.com, vol6@willing.com, vol7@willing.com, vol8@willing.com, vol9@willing.com, vol10@willing.com, vol11@willing.com, vol12@willing.com, vol13@willing.com, vol14@willing.com');
+  console.log('Volunteers: vol1@willing.com, vol2@willing.com, vol3@willing.com, vol4@willing.com, vol5@willing.com, vol6@willing.com, vol7@willing.com, vol8@willing.com, vol9@willing.com, vol10@willing.com, vol11@willing.com, vol12@willing.com, vol13@willing.com, vol14@willing.com, vol15@willing.com (scam)');
 
   await database.destroy();
 }

@@ -78,6 +78,16 @@ Willing connects volunteers with organizations that publish real-world help oppo
 - Organizations only manage their own postings and related applicant/enrollment decisions.
 - Admin does not run postings; admin governs organization access and the crisis event catalog.
 
+### Reporting & Moderation Flow
+
+- **Volunteer → Organization reports** are submitted from the organization profile page via `client/src/pages/OrganizationProfile.tsx`.
+- **Organization → Volunteer reports** are submitted from the organization volunteer profile page via `client/src/pages/organization/OrganizationVolunteerProfile.tsx`.
+- Both report forms reuse `client/src/components/reporting/ReportForm.tsx` and the shared report type constants in `client/src/components/reporting/reportType.constants.ts`.
+- Admin report review lives in `client/src/pages/admin/AdminReports.tsx` and report detail view in `client/src/pages/admin/AdminReportDetail.tsx`.
+- Backend report creation is handled in `server/src/api/routes/volunteer/index.ts` and `server/src/api/routes/organization/index.ts`.
+- Admin moderation and disable actions are handled in `server/src/api/routes/admin/index.ts`.
+- Disabling an account marks `is_disabled = true`, increments token version, removes related report rows, and prevents login in `server/src/api/routes/user.ts`.
+
 ## Repository Map
 
 - `client/src/main.tsx`: route tree and page wiring
