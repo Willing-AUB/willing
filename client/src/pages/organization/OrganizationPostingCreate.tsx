@@ -47,6 +47,7 @@ export default function OrganizationPostingCreate() {
   const startTime = useWatch({ control: form.control, name: 'start_time' }) ?? '';
   const endDate = useWatch({ control: form.control, name: 'end_date' }) ?? '';
   const endTime = useWatch({ control: form.control, name: 'end_time' }) ?? '';
+  const allowsPartialAttendance = useWatch({ control: form.control, name: 'allows_partial_attendance' }) ?? false;
 
   useEffect(() => {
     const loadCrises = async () => {
@@ -161,11 +162,32 @@ export default function OrganizationPostingCreate() {
           <div className="space-y-4">
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-              <div className="space-y-4">
+              <div className="flex flex-col gap-4">
+                <ToggleButton
+                  form={form}
+                  name="allows_partial_attendance"
+                  label="Attendance Commitment"
+                  options={[
+                    {
+                      value: true,
+                      label: 'Partial Attendance',
+                      description: 'Volunteers can choose specific days.',
+                      Icon: Calendar,
+                      btnColor: 'btn-primary',
+                    },
+                    {
+                      value: false,
+                      label: 'Full Commitment',
+                      description: 'Volunteers must attend all dates.',
+                      Icon: Users,
+                      btnColor: 'btn-secondary',
+                    },
+                  ]}
+                />
                 <div className="grid grid-cols-2 gap-3">
                   <FormField
                     form={form}
-                    label="Max Volunteers"
+                    label={`Max Volunteers${allowsPartialAttendance ? ' (per day)' : ''}`}
                     name="max_volunteers"
                     type="number"
                     placeholder="Optional"
@@ -301,40 +323,18 @@ export default function OrganizationPostingCreate() {
                     },
                   ]}
                 />
-
-                <ToggleButton
-                  form={form}
-                  name="allows_partial_attendance"
-                  label="Attendance Commitment"
-                  options={[
-                    {
-                      value: true,
-                      label: 'Partial Attendance',
-                      description: 'Volunteers can choose specific days.',
-                      Icon: Calendar,
-                      btnColor: 'btn-primary',
-                    },
-                    {
-                      value: false,
-                      label: 'Full Commitment',
-                      description: 'Volunteers must attend all dates.',
-                      Icon: Users,
-                      btnColor: 'btn-secondary',
-                    },
-                  ]}
-                />
               </div>
 
-              <div className="lg:col-span-1 flex flex-col">
-                <fieldset className="fieldset h-full flex flex-col">
+              <div className="lg:col-span-1 flex flex-col self-stretch">
+                <fieldset className="fieldset flex flex-col flex-1" style={{ minHeight: '500px' }}>
                   <label className="label">
                     <span className="label-text font-medium">Pin Location on Map</span>
                   </label>
-                  <div className="grow min-h-128">
+                  <div className="flex-1">
                     <LocationPicker
                       position={position}
                       setPosition={onMapPositionPick}
-                      className="h-full"
+                      className="h-full w-full"
                     />
                   </div>
                 </fieldset>
