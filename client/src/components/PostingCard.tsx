@@ -11,6 +11,7 @@ interface PostingCardProps {
   posting: PostingWithContext;
   showCrisis?: boolean;
   crisisTagClickable?: boolean;
+  fillHeight?: boolean;
 }
 
 const getPostingDates = (startDate: string | Date, endDate: string | Date | null | undefined) => {
@@ -75,7 +76,7 @@ const isPostingFullyBooked = (posting: PostingWithContext) => {
   return postingDates.every(date => (posting.date_capacity?.[date] ?? 0) >= posting.max_volunteers!);
 };
 
-function PostingCard({ posting, showCrisis = true, crisisTagClickable = true }: PostingCardProps) {
+function PostingCard({ posting, showCrisis = true, crisisTagClickable = true, fillHeight = false }: PostingCardProps) {
   const postingDetailsPath = `/posting/${posting.id}`;
   const normalizeTimestamp = (value: string | Date | undefined | null) => {
     if (value == null) return null;
@@ -138,7 +139,7 @@ function PostingCard({ posting, showCrisis = true, crisisTagClickable = true }: 
   );
 
   return (
-    <Card padding={false}>
+    <Card padding={false} fillHeight={fillHeight}>
       {showCrisis && posting.crisis_name && posting.crisis_id && (
         crisisTagClickable
           ? (
