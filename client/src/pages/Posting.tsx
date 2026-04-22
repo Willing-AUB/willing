@@ -1050,13 +1050,14 @@ function PostingPage() {
             <Card>
               <div className="flex items-start gap-3 mb-4">
                 {postingOrganization && (
-                  <OrganizationProfilePicture
-                    organizationName={postingOrganization.name}
-                    organizationId={postingOrganization.id}
-                    logoPath={postingOrganization.logoPath}
-                    size={48}
-                    linkToOrganizationPage
-                  />
+                  <Link to={`/organization/${postingOrganization.id}`} className="shrink-0">
+                    <OrganizationProfilePicture
+                      organizationName={postingOrganization.name}
+                      organizationId={postingOrganization.id}
+                      logoPath={postingOrganization.logoPath}
+                      size={48}
+                    />
+                  </Link>
                 )}
 
                 <div className="min-w-0">
