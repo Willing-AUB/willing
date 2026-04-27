@@ -722,6 +722,7 @@ function ControlledCalendarInfo({
                   mode="range"
                   selected={selectedRange}
                   disabled={disabledMatchers}
+                  excludeDisabled={Boolean(disabledMatchers)}
                   modifiers={hoverRangeModifiers}
                   modifiersClassNames={{
                     hoverRange: 'willing-hover-range',

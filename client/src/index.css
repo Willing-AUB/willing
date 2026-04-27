@@ -183,7 +183,13 @@ body {
 }
 
 .willing-day-picker .rdp-disabled .rdp-day_button {
+  cursor: not-allowed;
   opacity: 0.4;
+}
+
+.willing-day-picker .rdp-disabled .rdp-day_button:hover {
+  background: transparent;
+  color: var(--color-base-content);
 }
 
 .willing-day-picker .willing-hover-range .rdp-day_button {
