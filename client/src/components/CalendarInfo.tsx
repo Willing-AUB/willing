@@ -18,6 +18,7 @@ interface CalendarCommonProps {
   endLabel?: string;
   className?: string;
   disabledDates?: string[];
+  disablePastDates?: boolean;
   allowedDates?: string[];
   dateDetails?: Record<string, string>;
   showTopLabels?: boolean;
@@ -117,6 +118,7 @@ export default function CalendarInfo<T extends FieldValues>({
           {...(props.dateLabel ? { singleLabel: props.dateLabel } : {})}
           {...(props.datePlaceholder ? { singlePlaceholder: props.datePlaceholder } : {})}
           {...(props.disabledDates ? { disabledDates: props.disabledDates } : {})}
+          {...(props.disablePastDates ? { disablePastDates: props.disablePastDates } : {})}
           {...(props.allowedDates ? { allowedDates: props.allowedDates } : {})}
           {...(props.dateDetails ? { dateDetails: props.dateDetails } : {})}
         />
@@ -151,6 +153,7 @@ export default function CalendarInfo<T extends FieldValues>({
         }}
         rangeLabel={`${startLabel} - ${endLabel}`}
         {...(props.disabledDates ? { disabledDates: props.disabledDates } : {})}
+        {...(props.disablePastDates ? { disablePastDates: props.disablePastDates } : {})}
         {...(props.allowedDates ? { allowedDates: props.allowedDates } : {})}
         {...(props.dateDetails ? { dateDetails: props.dateDetails } : {})}
       />
@@ -188,6 +191,7 @@ export default function CalendarInfo<T extends FieldValues>({
       {...controlledModeProps}
       disabledDates={props.disabledDates}
       allowedDates={props.allowedDates}
+      disablePastDates={props.disablePastDates}
       dateDetails={props.dateDetails}
     />
   );
@@ -361,6 +365,7 @@ function ControlledCalendarInfo({
   selectionMode,
   disabledDates,
   allowedDates,
+  disablePastDates = false,
   dateDetails,
   rangeValue,
   onRangeChange,
@@ -378,6 +383,7 @@ function ControlledCalendarInfo({
   selectionMode?: CalendarSelectionMode;
   disabledDates?: string[];
   allowedDates?: string[];
+  disablePastDates?: boolean;
   dateDetails?: Record<string, string>;
   rangeValue?: CalendarDateRangeValue;
   onRangeChange?: (value: CalendarDateRangeValue) => void;
@@ -427,24 +433,33 @@ function ControlledCalendarInfo({
   const allowedDateSet = useMemo(() => {
     return new Set((allowedDates ?? []).map(getDatePart).filter(Boolean));
   }, [allowedDates]);
+  const disabledMatchers: Matcher[] | undefined = (() => {
+    const matchers: Matcher[] = [];
 
-  const disabledMatchers: Matcher[] | undefined = disabledDateSet.size > 0 || allowedDateSet.size > 0
-    ? [
-        (date: Date) => {
-          const formattedDate = formatInputDate(date);
+    if (disablePastDates) {
+      const today = new Date();
+      today.setUTCHours(0, 0, 0, 0);
+      matchers.push({ before: today });
+    }
 
-          if (disabledDateSet.has(formattedDate)) {
-            return true;
-          }
+    if (disabledDateSet.size > 0 || allowedDateSet.size > 0) {
+      matchers.push((date: Date) => {
+        const formattedDate = formatInputDate(date);
 
-          if (allowedDateSet.size > 0 && !allowedDateSet.has(formattedDate)) {
-            return true;
-          }
+        if (disabledDateSet.has(formattedDate)) {
+          return true;
+        }
 
-          return false;
-        },
-      ]
-    : undefined;
+        if (allowedDateSet.size > 0 && !allowedDateSet.has(formattedDate)) {
+          return true;
+        }
+
+        return false;
+      });
+    }
+
+    return matchers.length > 0 ? matchers : undefined;
+  })();
 
   const dayPickerComponents = Object.keys(normalizedDateDetails).length > 0
     ? {
@@ -631,10 +646,10 @@ function ControlledCalendarInfo({
             <button
               ref={startTriggerRef}
               type="button"
-              className="input input-bordered flex w-full items-center justify-between gap-2"
+              className="input input-bordered flex w-full min-w-0 items-center justify-between gap-2"
               onClick={() => openOrTogglePicker(selectedFromDate ?? selectedToDate ?? new Date())}
             >
-              <span className="truncate text-left">{valueText}</span>
+              <span className="truncate text-left min-w-0 flex-1">{valueText}</span>
               <CalendarDays size={16} className="shrink-0 opacity-70" />
             </button>
 
@@ -749,10 +764,10 @@ function ControlledCalendarInfo({
             <button
               ref={startTriggerRef}
               type="button"
-              className="input input-bordered flex w-full items-center justify-between gap-2"
+              className="input input-bordered flex w-full min-w-0 items-center justify-between gap-2"
               onClick={() => openOrTogglePicker(selectedDate ?? new Date())}
             >
-              <span className="truncate text-left">{singleText}</span>
+              <span className="truncate text-left min-w-0 flex-1">{singleText}</span>
               <CalendarDays size={16} className="shrink-0 opacity-70" />
             </button>
 
@@ -845,10 +860,10 @@ function ControlledCalendarInfo({
           <button
             ref={startTriggerRef}
             type="button"
-            className="input input-bordered flex w-full items-center justify-between gap-2"
+            className="input input-bordered flex w-full min-w-0 items-center justify-between gap-2"
             onClick={() => openOrTogglePicker(parsedSelectedDates[0] ?? new Date())}
           >
-            <span className="truncate overflow-hidden whitespace-nowrap text-ellipsis block max-w-[calc(100%-2.5rem)]" title={allSelectedDateText || dateListText}>{dateListText}</span>
+            <span className="truncate overflow-hidden whitespace-nowrap text-ellipsis block min-w-0 flex-1" title={allSelectedDateText || dateListText}>{dateListText}</span>
             <CalendarDays size={16} className="shrink-0 opacity-70" />
           </button>
 

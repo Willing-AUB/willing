@@ -5,32 +5,32 @@ import { useLocation, useSearchParams } from 'react-router-dom';
 import {
   buildSharedPostingQuery,
   hasSharedAdvancedPostingFilters,
-  organizationPostingSortOptions,
-  resolveOrganizationPostingSortOption,
+  postingSortOptions,
+  resolvePostingSortOption,
   resolveVolunteerPostingSortOption,
-  toOrganizationPostingSortOptionValue,
+  toPostingSortOptionValue,
   toVolunteerPostingSortOptionValue,
   volunteerPostingSortOptions,
   type PostingSortDir,
   type SharedPostingFilterFields,
-  type OrganizationPostingSortBy,
-  type OrganizationPostingSortOptionValue,
+  type PostingSortBy,
+  type PostingSortOptionValue,
   type VolunteerPostingSortBy,
   type VolunteerPostingSortOptionValue,
 } from './postingFilterConfig.ts';
 import { FormField } from '../../utils/formUtils.tsx';
 import requestServer from '../../utils/requestServer.ts';
 import useAsync from '../../utils/useAsync';
+import Button from '../Button.tsx';
 import CalendarInfo from '../CalendarInfo.tsx';
 import EmptyState from '../EmptyState.tsx';
 import CrisisCard from './CrisisCard.tsx';
-import PageContainer from '../layout/PageContainer.tsx';
-import PageHeader from '../layout/PageHeader.tsx';
-import Loading from '../Loading.tsx';
 import OrganizationCard from './OrganizationCard.tsx';
 import PostingCollection from './PostingCollection.tsx';
+import Loading from '../Loading.tsx';
 import PostingFiltersCard from './PostingFiltersCard.tsx';
-import Button from '../Button.tsx';
+import PageContainer from '../layout/PageContainer.tsx';
+import PageHeader from '../layout/PageHeader.tsx';
 
 import type {
   VolunteerCrisesResponse,
@@ -43,7 +43,7 @@ import type { Crisis } from '../../../../server/src/db/tables/index.ts';
 import type { PostingWithContext } from '../../../../server/src/types.ts';
 
 export type PostingSearchFilters = SharedPostingFilterFields & {
-  sortBy: VolunteerPostingSortBy | OrganizationPostingSortBy | CrisisPostingSortBy;
+  sortBy: VolunteerPostingSortBy | PostingSortBy | CrisisPostingSortBy;
   sortDir: PostingSortDir;
   startDateFrom: string;
   endDateTo: string;
@@ -65,7 +65,7 @@ type CrisisPostingSortBy = 'pinned' | 'title';
 type CrisisPostingSortOptionValue = 'pinned_first' | 'title_asc' | 'title_desc';
 
 type PostingSearchFormValues = Omit<PostingSearchFilters, 'sortBy' | 'sortDir'> & {
-  sortOption: VolunteerPostingSortOptionValue | OrganizationPostingSortOptionValue | CrisisPostingSortOptionValue;
+  sortOption: VolunteerPostingSortOptionValue | PostingSortOptionValue | CrisisPostingSortOptionValue;
   crisisFilter: PostingSearchFilters['crisisFilter'];
   entity: PostingSearchFilters['entity'];
 };
@@ -89,12 +89,13 @@ type PostingSearchViewProps = {
   crisisOptions?: PostingCrisisOption[];
   enableOrganizationSearch?: boolean;
   showEntityTabs?: boolean;
+  postingsTopContent?: ReactNode;
 };
 
 const toPostingSearchFormValues = (filters: PostingSearchFilters): PostingSearchFormValues => ({
   search: filters.search,
   sortOption: filters.entity === 'organizations'
-    ? toOrganizationPostingSortOptionValue(filters.sortBy as OrganizationPostingSortBy, filters.sortDir)
+    ? toPostingSortOptionValue(filters.sortBy as PostingSortBy, filters.sortDir)
     : filters.entity === 'crises'
       ? (filters.sortBy === 'pinned'
           ? 'pinned_first'
@@ -113,12 +114,12 @@ const toPostingSearchFormValues = (filters: PostingSearchFilters): PostingSearch
 });
 
 const fromPostingSearchFormValues = (values: PostingSearchFormValues): PostingSearchFilters => {
-  let querySortBy: VolunteerPostingSortBy | OrganizationPostingSortBy | CrisisPostingSortBy = 'title';
+  let querySortBy: VolunteerPostingSortBy | PostingSortBy | CrisisPostingSortBy = 'title';
   let querySortDir: PostingSortDir = 'asc';
   let crisisFilter: 'all' | 'pinned_only' | 'unpinned_only' = 'all';
 
   if (values.entity === 'organizations') {
-    const selectedSortOption = resolveOrganizationPostingSortOption(values.sortOption as OrganizationPostingSortOptionValue);
+    const selectedSortOption = resolvePostingSortOption(values.sortOption as PostingSortOptionValue);
     querySortBy = 'title';
     querySortDir = selectedSortOption.sortDir;
   } else if (values.entity === 'crises') {
@@ -187,6 +188,7 @@ function PostingSearchView({
   crisisOptions = [],
   enableOrganizationSearch = false,
   showEntityTabs = true,
+  postingsTopContent,
 }: PostingSearchViewProps) {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -400,10 +402,38 @@ function PostingSearchView({
     await fetchPostings(filters);
   }, [fetchPostings, activeEntity, storageKey]);
 
+  // When switching the active entity (tabs), auto-fetch results so the
+  // loading state appears immediately instead of showing an empty screen.
+  useEffect(() => {
+    let cancelled = false;
+    const doFetch = async () => {
+      // If we already have results for the selected entity, skip fetching.
+      if (postings.length > 0 || organizations.length > 0 || crises.length > 0) return;
+
+      try {
+        await fetchPostings(activeFilters);
+      } catch {
+        if (cancelled) return;
+      }
+    };
+
+    void doFetch();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeEntity, storageKey, fetchPostings, activeFilters, postings.length, organizations.length, crises.length]);
+
   const setEntityInUrl = useCallback((entity: PostingSearchFilters['entity']) => {
     const nextParams = new URLSearchParams(searchParams);
     nextParams.set('entity', entity);
     setSearchParams(nextParams);
+
+    // Immediately show loading skeleton when user switches entity.
+    setLoading(true);
+    setPostings([]);
+    setOrganizations([]);
+    setCrises([]);
 
     if (showEntityTabs && typeof window !== 'undefined') {
       const entityDefaults = getCleanDefaultsForEntity(entity);
@@ -425,6 +455,14 @@ function PostingSearchView({
     }
   }, [searchParams, setSearchParams, showEntityTabs, storageKey, persistedFilters]);
 
+  const postingsInlineControls = activeEntity === 'postings'
+    ? (postingsTopContent ?? actions)
+    : undefined;
+
+  const headerActions = showEntityTabs
+    ? undefined
+    : actions;
+
   return (
     <PageContainer>
       <PageHeader
@@ -432,7 +470,7 @@ function PostingSearchView({
         subtitle={subtitle}
         icon={icon}
         badge={badge}
-        actions={actions}
+        actions={headerActions}
         showBack={showBack}
         defaultBackTo={defaultBackTo}
       />
@@ -509,7 +547,7 @@ function PostingSearchView({
           : 'Search by title, description, or location'}
         sortFieldName="sortOption"
         sortOptions={activeEntity === 'organizations'
-          ? organizationPostingSortOptions
+          ? postingSortOptions
               .filter(option => option.value === 'title_asc' || option.value === 'title_desc')
               .map(option => ({
                 label: option.value === 'title_asc' ? 'Name (A-Z)' : 'Name (Z-A)',
@@ -649,12 +687,20 @@ function PostingSearchView({
         )}
       />
 
+      {postingsInlineControls && (
+        <div className="-mt-1 mb-2 flex justify-end">
+          {postingsInlineControls}
+        </div>
+      )}
+
       {error && <div className="mb-4 text-sm text-base-content/70">Unable to load postings.</div>}
 
       {loading
         ? (
-            <div className="flex justify-center py-10">
-              <Loading size="lg" />
+            <div className="p-6">
+              <div className="flex justify-center mt-8">
+                <Loading size="xl" />
+              </div>
             </div>
           )
         : activeEntity === 'crises'
