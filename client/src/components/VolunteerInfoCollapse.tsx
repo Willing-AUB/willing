@@ -84,11 +84,13 @@ function VolunteerInfoCollapse({ volunteer, actions, profileLink }: VolunteerInf
   const dates = 'dates' in volunteer ? volunteer.dates : undefined;
   const requestedDates = 'requested_dates' in volunteer ? volunteer.requested_dates : undefined;
 
-  const collapseAction = actions ? (
-    <div className="flex items-center gap-2">
-      {actions}
-    </div>
-  ) : undefined;
+  const collapseAction = actions
+    ? (
+        <div className="flex items-center gap-2">
+          {actions}
+        </div>
+      )
+    : undefined;
 
   return (
     <Collapse
