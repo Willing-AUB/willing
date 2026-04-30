@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { AlertTriangle, Building2, ClipboardList, Flag, Globe, Mail, MapPin, Phone } from 'lucide-react';
+import { AlertTriangle, Award, Building2, ClipboardList, Flag, Globe, Mail, MapPin, Phone } from 'lucide-react';
 import { useContext, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
@@ -275,6 +275,25 @@ function OrganizationProfile() {
                         >
                           {data.organization.url}
                         </a>
+                      </div>
+                    </div>
+                  )}
+
+                  {data.organization.hours_threshold !== null && (
+                    <div className="flex gap-3">
+                      <Award
+                        size={20}
+                        className="text-primary shrink-0 mt-0.5"
+                      />
+                      <div className="flex-1">
+                        <p className="text-xs opacity-70 font-semibold mb-0.5">
+                          CERTIFICATE HOURS THRESHOLD
+                        </p>
+                        <p className="text-sm">
+                          {data.organization.hours_threshold}
+                          {' '}
+                          hours
+                        </p>
                       </div>
                     </div>
                   )}

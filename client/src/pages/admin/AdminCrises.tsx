@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { AlertCircle, Pencil, Pin, PinOff, Plus, RotateCcw, Save, Search, SlidersHorizontal, Trash2, X } from 'lucide-react';
+import { AlertTriangle, Pencil, Pin, PinOff, Plus, RotateCcw, Save, Search, SlidersHorizontal, Trash2, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import zod from 'zod';
@@ -343,7 +343,7 @@ function AdminCrises() {
       <PageHeader
         title="Crisis Management"
         subtitle="Create, edit, delete, and pin crises according to the current situation."
-        icon={AlertCircle}
+        icon={AlertTriangle}
       />
 
       <ColumnLayout
@@ -360,7 +360,7 @@ function AdminCrises() {
                 name="name"
                 label="Crisis Name"
                 placeholder="Crisis name"
-                Icon={AlertCircle}
+                Icon={AlertTriangle}
               />
               <FormField
                 form={crisisForm}
@@ -487,7 +487,7 @@ function AdminCrises() {
             : crises.length === 0
               ? (
                   <EmptyState
-                    Icon={AlertCircle}
+                    Icon={AlertTriangle}
                     title="No crises added yet"
                     description="Create a crisis to help organizations tag urgent opportunities."
                   />
