@@ -1,4 +1,4 @@
-import { getLocalOffsetMinutes } from '../../utils/timeUtils.ts';
+import { toLocalTime } from '../../utils/timeUtils.ts';
 
 import type { PostingWithContext } from '../../../../server/src/types';
 
@@ -61,19 +61,17 @@ export const hasPostingEnded = (posting: PostingEndFields, now: Date = new Date(
   return endDateTime != null ? now > endDateTime : false;
 };
 
-export const formatTime12Hour = (timeValue: string | undefined): string => {
+export const formatTime12Hour = (timeValue: string | undefined, dateInput?: string): string => {
   if (!timeValue) return '';
-  const [hoursRaw, minutesRaw] = timeValue.split(':');
+  const localTime = toLocalTime(timeValue.slice(0, 5), dateInput);
+  const [hoursRaw, minutesRaw] = localTime.split(':');
   const hours = Number(hoursRaw);
   const minutes = Number(minutesRaw);
   if (Number.isNaN(hours) || Number.isNaN(minutes)) return timeValue;
-  const totalMinutes = (hours * 60 + minutes) + getLocalOffsetMinutes();
-  const localHours = ((totalMinutes / 60 | 0) + 24) % 24;
-  const localMinutes = ((totalMinutes % 60) + 60) % 60;
-  const normalizedHours = ((localHours % 24) + 24) % 24;
+  const normalizedHours = ((hours % 24) + 24) % 24;
   const suffix = normalizedHours >= 12 ? 'PM' : 'AM';
   const hour12 = normalizedHours % 12 === 0 ? 12 : normalizedHours % 12;
-  return `${hour12}:${String(localMinutes).padStart(2, '0')} ${suffix}`;
+  return `${hour12}:${String(minutes).padStart(2, '0')} ${suffix}`;
 };
 
 export const formatCardDate = (dateValue: Date | null): string => {

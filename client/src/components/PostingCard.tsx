@@ -9,6 +9,7 @@ import { DOMAIN_COLORS } from '../constants';
 import { formatCardDate, formatTime12Hour, hasPostingEnded, isPostingFullyBooked, normalizeTimestamp } from './postings/postingUtils';
 import useNow from './postings/useNow.ts';
 import SkillsList from './skills/SkillsList';
+import { toIsoDate, toLocalDateTime } from '../utils/timeUtils.ts';
 
 import type { PostingWithContext } from '../../../server/src/types';
 
@@ -37,6 +38,12 @@ function PostingCard({
 
   const startDt = normalizeTimestamp(startDateValue);
   const endDt = normalizeTimestamp(endDateValue);
+  const startLocalDate = posting.start_time
+    ? toLocalDateTime(posting.start_time.slice(0, 5), toIsoDate(posting.start_date) ?? '')
+    : null;
+  const endLocalDate = posting.end_time && posting.end_date
+    ? toLocalDateTime(posting.end_time.slice(0, 5), toIsoDate(posting.end_date) ?? '')
+    : null;
   const hasEndDate = Boolean(endDt);
 
   const now = useNow();
@@ -45,10 +52,16 @@ function PostingCard({
     [now, posting],
   );
 
-  const startDateStr = formatCardDate(startDt);
-  const endDateStr = formatCardDate(endDt);
-  const startTimeStr = formatTime12Hour(startTimeValue) || (startDt ? startDt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }) : '');
-  const endTimeStr = formatTime12Hour(endTimeValue) || (endDt ? endDt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }) : '');
+  const startDateStr = startLocalDate
+    ? formatCardDate(new Date(`${startLocalDate.date}T00:00:00Z`))
+    : formatCardDate(startDt);
+  const endDateStr = endLocalDate
+    ? formatCardDate(new Date(`${endLocalDate.date}T00:00:00Z`))
+    : formatCardDate(endDt);
+  const startTimeStr = formatTime12Hour(startTimeValue, toIsoDate(posting.start_date))
+    || (startDt ? startDt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }) : '');
+  const endTimeStr = formatTime12Hour(endTimeValue, toIsoDate(posting.end_date ?? posting.start_date))
+    || (endDt ? endDt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }) : '');
   const isSingleDayPosting = !hasEndDate || startDateStr === endDateStr;
   const shouldShowVolunteerCapacity = posting.max_volunteers != null && (!posting.allows_partial_attendance || isSingleDayPosting);
   const shouldShowVolunteerCountOnly = !shouldShowVolunteerCapacity;
