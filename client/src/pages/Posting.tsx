@@ -876,15 +876,6 @@ function PostingPage() {
   const formattedEndDate = useMemo(() => formatDisplayDate(endDate), [endDate]);
   const formattedEndTime = useMemo(() => formatDisplayTime(endTime), [endTime]);
 
-  console.log('UTC from server:', posting?.start_time, posting?.start_date);
-  console.log('After toLocalDateTime:', posting?.start_time && posting?.start_date
-    ? toLocalDateTime(
-        getTimeInputValue(posting.start_time),
-        getDateInputValue(posting.start_date),
-      )
-    : 'no posting');
-  console.log('formattedStartTime:', formattedStartTime);
-
   const applicationStatus = useMemo(() => {
     if (isEnrolled) {
       return {

@@ -160,10 +160,6 @@ function PostingList({
     </>
   );
 
-  console.log('LIST raw:', posting.start_time, posting.start_date);
-  console.log('LIST toIsoDate:', toIsoDate(posting.start_date));
-  console.log('LIST formatted time:', startTimeStr);
-
   return (
 
     <div className="relative overflow-visible">

@@ -84,9 +84,6 @@ function PostingCard({
       </span>
     </>
   );
-  console.log('CARD startDt:', startDt);
-  console.log('CARD formatCardDate:', formatCardDate(startDt));
-  console.log('CARD startLocalDate:', startLocalDate);
 
   return (
     <Card padding={false} fillHeight={fillHeight} className={fillHeight ? 'h-full min-h-96' : ''}>
