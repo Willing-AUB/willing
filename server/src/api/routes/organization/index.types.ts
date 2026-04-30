@@ -11,7 +11,7 @@ export type OrganizationGetSignatureFileResponse = never;
 export type OrganizationVolunteerCvDownloadResponse = never;
 
 export type OrganizationProfileResponse = {
-  organization: OrganizationAccountWithoutPasswordAndVector;
+  organization: OrganizationAccountWithoutPasswordAndVector & { hours_threshold: number | null };
   postings: (PostingWithoutVectors & { skills: PostingSkill[]; enrollment_count: number })[];
 };
 

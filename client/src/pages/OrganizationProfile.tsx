@@ -278,6 +278,25 @@ function OrganizationProfile() {
                       </div>
                     </div>
                   )}
+
+                  {data.organization.hours_threshold !== null && (
+                    <div className="flex gap-3">
+                      <ClipboardList
+                        size={20}
+                        className="text-primary shrink-0 mt-0.5"
+                      />
+                      <div className="flex-1">
+                        <p className="text-xs opacity-70 font-semibold mb-0.5">
+                          CERTIFICATE HOURS THRESHOLD
+                        </p>
+                        <p className="text-sm">
+                          {data.organization.hours_threshold}
+                          {' '}
+                          hours
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </Card>
 
