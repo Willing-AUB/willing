@@ -13,7 +13,7 @@ export const toLocalTime = (utcTime: string, dateInput?: string): string => {
   if (Number.isNaN(hh) || Number.isNaN(mm)) return utcTime;
   const offsetMinutes = dateInput ? getOffsetMinutesForDate(dateInput) : getLocalOffsetMinutes();
   const totalMinutes = (hh * 60 + mm) + offsetMinutes;
-  const localHh = ((totalMinutes / 60 | 0) + 24) % 24;
+  const localHh = (Math.floor(totalMinutes / 60) + 24) % 24;
   const localMm = ((totalMinutes % 60) + 60) % 60;
   return `${String(localHh).padStart(2, '0')}:${String(localMm).padStart(2, '0')}`;
 };
@@ -43,16 +43,14 @@ export const toUtcDateTime = (
   const offsetMinutes = getOffsetMinutesForDate(localDate);
   const totalMinutes = (hh * 60 + mm) - offsetMinutes;
 
-  // how many days did we shift?
   const dayShift = Math.floor(totalMinutes / (24 * 60));
-  const utcHh = ((totalMinutes / 60 | 0) % 24 + 24) % 24;
+  const utcHh = (Math.floor(totalMinutes / 60) % 24 + 24) % 24;
   const utcMm = ((totalMinutes % 60) + 60) % 60;
 
   const utcTime = `${String(utcHh).padStart(2, '0')}:${String(utcMm).padStart(2, '0')}`;
 
   if (dayShift === 0) return { date: localDate, time: utcTime };
 
-  // shift the date by however many days wrapped
   const d = new Date(`${localDate}T00:00:00`);
   d.setDate(d.getDate() + dayShift);
   const utcDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -82,4 +80,10 @@ export const toLocalDateTime = (
   d.setDate(d.getDate() + dayShift);
   const localDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   return { date: localDate, time: localTime };
+};
+
+export const toIsoDate = (value: string | Date | null | undefined): string | undefined => {
+  if (!value) return undefined;
+  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  return value.split('T')[0];
 };
