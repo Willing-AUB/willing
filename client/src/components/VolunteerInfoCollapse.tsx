@@ -84,15 +84,21 @@ function VolunteerInfoCollapse({ volunteer, actions, profileLink }: VolunteerInf
   const dates = 'dates' in volunteer ? volunteer.dates : undefined;
   const requestedDates = 'requested_dates' in volunteer ? volunteer.requested_dates : undefined;
 
+  const collapseAction = actions ? (
+    <div className="flex items-center gap-2">
+      {actions}
+    </div>
+  ) : undefined;
+
   return (
     <Collapse
-      action={actions}
+      action={collapseAction}
       actionClassName="justify-end"
       titleClassName="z-10 pointer-events-none"
       contentClassName="pt-0"
       title={(
-        <>
-          <div className="flex items-center gap-3 flex-1">
+        <div className="flex items-start gap-3 w-full">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
             {profileLink
               ? (
                   <Link
@@ -166,7 +172,7 @@ function VolunteerInfoCollapse({ volunteer, actions, profileLink }: VolunteerInf
                 )}
           </div>
           {hasCv && (
-            <div className="pointer-events-auto" onClick={event => event.stopPropagation()}>
+            <div className="flex-shrink-0 pointer-events-auto">
               <IconButton
                 type="button"
                 color="primary"
@@ -180,7 +186,7 @@ function VolunteerInfoCollapse({ volunteer, actions, profileLink }: VolunteerInf
               />
             </div>
           )}
-        </>
+        </div>
       )}
     >
       <div className="flex items-center gap-2 text-xs opacity-70 sm:mt-1 mt-3">
