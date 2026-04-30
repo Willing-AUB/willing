@@ -385,9 +385,12 @@ function PostingPage() {
         description: postingResponse.posting.description,
         location_name: postingResponse.posting.location_name,
         start_date: getDateInputValue(postingResponse.posting.start_date),
-        start_time: toLocalTime(getTimeInputValue(postingResponse.posting.start_time)),
+        start_time: toLocalTime(getTimeInputValue(postingResponse.posting.start_time), getDateInputValue(postingResponse.posting.start_date)),
         end_date: postingResponse.posting.end_date ? getDateInputValue(postingResponse.posting.end_date) : '',
-        end_time: toLocalTime(getTimeInputValue(postingResponse.posting.end_time)),
+        end_time: toLocalTime(
+          getTimeInputValue(postingResponse.posting.end_time),
+          getDateInputValue(postingResponse.posting.end_date ?? postingResponse.posting.start_date),
+        ),
         max_volunteers: postingResponse.posting.max_volunteers?.toString() ?? '',
         minimum_age: postingResponse.posting.minimum_age?.toString() ?? '',
         automatic_acceptance: postingResponse.posting.automatic_acceptance,
@@ -463,9 +466,12 @@ function PostingPage() {
       description: postingResponse.posting.description,
       location_name: postingResponse.posting.location_name,
       start_date: getDateInputValue(postingResponse.posting.start_date),
-      start_time: toLocalTime(getTimeInputValue(postingResponse.posting.start_time)),
+      start_time: toLocalTime(getTimeInputValue(postingResponse.posting.start_time), getDateInputValue(postingResponse.posting.start_date)),
       end_date: postingResponse.posting.end_date ? getDateInputValue(postingResponse.posting.end_date) : '',
-      end_time: toLocalTime(getTimeInputValue(postingResponse.posting.end_time)),
+      end_time: toLocalTime(
+        getTimeInputValue(postingResponse.posting.end_time),
+        getDateInputValue(postingResponse.posting.end_date ?? postingResponse.posting.start_date),
+      ),
       max_volunteers: postingResponse.posting.max_volunteers?.toString() ?? '',
       minimum_age: postingResponse.posting.minimum_age?.toString() ?? '',
       automatic_acceptance: postingResponse.posting.automatic_acceptance,
@@ -571,9 +577,9 @@ function PostingPage() {
           skills: skills.length > 0 ? skills : undefined,
           crisis_id: selectedCrisisId ?? null,
           start_date: data.start_date,
-          start_time: data.start_time ? toUtcTime(data.start_time) : data.start_time,
+          start_time: data.start_time ? toUtcTime(data.start_time, data.start_date) : data.start_time,
           end_date: data.end_date,
-          end_time: data.end_time ? toUtcTime(data.end_time) : data.end_time,
+          end_time: data.end_time ? toUtcTime(data.end_time, data.end_date || data.start_date) : data.end_time,
         };
 
         const response = await updatePosting(id, payload);

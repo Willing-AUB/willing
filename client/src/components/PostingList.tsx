@@ -31,6 +31,12 @@ function PostingList({
   volunteerOutsideMetaAt1700 = false,
   showOrganizationName = variant === 'volunteer',
 }: PostingListProps) {
+  const toIsoDate = (value: string | Date | null | undefined): string | undefined => {
+    if (!value) return undefined;
+    if (value instanceof Date) return value.toISOString().slice(0, 10);
+    return value.split('T')[0];
+  };
+
   const postingDetailsPath = `/posting/${posting.id}`;
   const hasOrganizationName = Boolean(posting.organization_name);
 
@@ -46,11 +52,11 @@ function PostingList({
 
   const startDateStr = formatCardDate(startDt) || 'TBA';
   const endDateStr = formatCardDate(endDt) || 'TBA';
-  const startTimeStr = formatTime12Hour(posting.start_time || '')
+  const startTimeStr = formatTime12Hour(posting.start_time || '', toIsoDate(posting.start_date))
     || (startDt
       ? startDt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })
       : 'TBA');
-  const endTimeStr = formatTime12Hour(posting.end_time || '')
+  const endTimeStr = formatTime12Hour(posting.end_time || '', toIsoDate(posting.end_date ?? posting.start_date))
     || (endDt
       ? endDt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })
       : 'TBA');

@@ -1,17 +1,17 @@
 export const getLocalOffsetMinutes = (): number => -new Date().getTimezoneOffset();
 
-export const toUtcTime = (localTime: string): string => {
-  const [hh, mm] = localTime.split(':').map(Number);
-  const totalMinutes = (hh * 60 + mm) - getLocalOffsetMinutes();
-  const utcHh = ((totalMinutes / 60 | 0) + 24) % 24;
-  const utcMm = ((totalMinutes % 60) + 60) % 60;
-  return `${String(utcHh).padStart(2, '0')}:${String(utcMm).padStart(2, '0')}`;
+const normalizeTime = (timeValue: string): string => {
+  const [hhRaw, mmRaw] = timeValue.split(':');
+  const hh = Number(hhRaw);
+  const mm = Number(mmRaw);
+  if (Number.isNaN(hh) || Number.isNaN(mm)) return timeValue;
+  const safeHh = ((hh % 24) + 24) % 24;
+  const safeMm = ((mm % 60) + 60) % 60;
+  return `${String(safeHh).padStart(2, '0')}:${String(safeMm).padStart(2, '0')}`;
 };
 
-export const toLocalTime = (utcTime: string): string => {
-  const [hh, mm] = utcTime.split(':').map(Number);
-  const totalMinutes = (hh * 60 + mm) + getLocalOffsetMinutes();
-  const localHh = ((totalMinutes / 60 | 0) + 24) % 24;
-  const localMm = ((totalMinutes % 60) + 60) % 60;
-  return `${String(localHh).padStart(2, '0')}:${String(localMm).padStart(2, '0')}`;
+export const toUtcTime = (localTime: string, _dateInput?: string): string => normalizeTime(localTime);
+
+export const toLocalTime = (utcTime: string, _dateInput?: string): string => {
+  return normalizeTime(utcTime);
 };

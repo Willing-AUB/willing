@@ -27,6 +27,12 @@ function PostingCard({
   crisisBasePath = '/volunteer/crises',
   fillHeight = false,
 }: PostingCardProps) {
+  const toIsoDate = (value: string | Date | null | undefined): string | undefined => {
+    if (!value) return undefined;
+    if (value instanceof Date) return value.toISOString().slice(0, 10);
+    return value.split('T')[0];
+  };
+
   const postingDetailsPath = `/posting/${posting.id}`;
 
   const startDateValue = posting.start_date;
@@ -47,8 +53,10 @@ function PostingCard({
 
   const startDateStr = formatCardDate(startDt);
   const endDateStr = formatCardDate(endDt);
-  const startTimeStr = formatTime12Hour(startTimeValue) || (startDt ? startDt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }) : '');
-  const endTimeStr = formatTime12Hour(endTimeValue) || (endDt ? endDt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }) : '');
+  const startTimeStr = formatTime12Hour(startTimeValue, toIsoDate(posting.start_date))
+    || (startDt ? startDt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }) : '');
+  const endTimeStr = formatTime12Hour(endTimeValue, toIsoDate(posting.end_date ?? posting.start_date))
+    || (endDt ? endDt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }) : '');
   const isSingleDayPosting = !hasEndDate || startDateStr === endDateStr;
   const shouldShowVolunteerCapacity = posting.max_volunteers != null && (!posting.allows_partial_attendance || isSingleDayPosting);
   const shouldShowVolunteerCountOnly = !shouldShowVolunteerCapacity;
