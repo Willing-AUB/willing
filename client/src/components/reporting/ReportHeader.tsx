@@ -9,7 +9,13 @@ type ReportHeaderProps = {
   className?: string;
 };
 
-const formatReportedDate = (createdAt: string | Date) => new Date(createdAt).toLocaleString();
+const formatReportedDate = (createdAt: string | Date) => new Date(createdAt).toLocaleString(undefined, {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+  hour: 'numeric',
+  minute: '2-digit',
+});
 
 function ReportHeader({
   createdAt,
