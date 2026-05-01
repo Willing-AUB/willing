@@ -56,7 +56,7 @@ import useNotifications from '../notifications/useNotifications';
 import { postingEditFormSchema, type PostingEditFormData } from '../schemas/posting';
 import { executeAndShowError, FormField } from '../utils/formUtils.tsx';
 import requestServer from '../utils/requestServer.ts';
-import { toLocalTime, toUtcTime } from '../utils/timeUtils.ts';
+import { toLocalDateTime, toUtcDateTime } from '../utils/timeUtils.ts';
 import useAsync from '../utils/useAsync';
 import { useOrganization } from '../utils/useUsers.ts';
 
@@ -384,10 +384,28 @@ function PostingPage() {
         title: postingResponse.posting.title,
         description: postingResponse.posting.description,
         location_name: postingResponse.posting.location_name,
-        start_date: getDateInputValue(postingResponse.posting.start_date),
-        start_time: toLocalTime(getTimeInputValue(postingResponse.posting.start_time)),
-        end_date: postingResponse.posting.end_date ? getDateInputValue(postingResponse.posting.end_date) : '',
-        end_time: toLocalTime(getTimeInputValue(postingResponse.posting.end_time)),
+        ...(() => {
+          const startUtcDate = getDateInputValue(postingResponse.posting.start_date);
+          const startUtcTime = getTimeInputValue(postingResponse.posting.start_time);
+          const start = startUtcTime
+            ? toLocalDateTime(startUtcTime, startUtcDate)
+            : { date: startUtcDate, time: startUtcTime };
+
+          const endUtcDate = postingResponse.posting.end_date
+            ? getDateInputValue(postingResponse.posting.end_date)
+            : '';
+          const endUtcTime = getTimeInputValue(postingResponse.posting.end_time);
+          const end = endUtcDate && endUtcTime
+            ? toLocalDateTime(endUtcTime, endUtcDate)
+            : { date: endUtcDate, time: endUtcTime };
+
+          return {
+            start_date: start.date,
+            start_time: start.time,
+            end_date: end.date,
+            end_time: end.time,
+          };
+        })(),
         max_volunteers: postingResponse.posting.max_volunteers?.toString() ?? '',
         minimum_age: postingResponse.posting.minimum_age?.toString() ?? '',
         automatic_acceptance: postingResponse.posting.automatic_acceptance,
@@ -462,10 +480,28 @@ function PostingPage() {
       title: postingResponse.posting.title,
       description: postingResponse.posting.description,
       location_name: postingResponse.posting.location_name,
-      start_date: getDateInputValue(postingResponse.posting.start_date),
-      start_time: toLocalTime(getTimeInputValue(postingResponse.posting.start_time)),
-      end_date: postingResponse.posting.end_date ? getDateInputValue(postingResponse.posting.end_date) : '',
-      end_time: toLocalTime(getTimeInputValue(postingResponse.posting.end_time)),
+      ...(() => {
+        const startUtcDate = getDateInputValue(postingResponse.posting.start_date);
+        const startUtcTime = getTimeInputValue(postingResponse.posting.start_time);
+        const start = startUtcTime
+          ? toLocalDateTime(startUtcTime, startUtcDate)
+          : { date: startUtcDate, time: startUtcTime };
+
+        const endUtcDate = postingResponse.posting.end_date
+          ? getDateInputValue(postingResponse.posting.end_date)
+          : '';
+        const endUtcTime = getTimeInputValue(postingResponse.posting.end_time);
+        const end = endUtcDate && endUtcTime
+          ? toLocalDateTime(endUtcTime, endUtcDate)
+          : { date: endUtcDate, time: endUtcTime };
+
+        return {
+          start_date: start.date,
+          start_time: start.time,
+          end_date: end.date,
+          end_time: end.time,
+        };
+      })(),
       max_volunteers: postingResponse.posting.max_volunteers?.toString() ?? '',
       minimum_age: postingResponse.posting.minimum_age?.toString() ?? '',
       automatic_acceptance: postingResponse.posting.automatic_acceptance,
@@ -570,10 +606,20 @@ function PostingPage() {
           is_closed: data.is_closed,
           skills: skills.length > 0 ? skills : undefined,
           crisis_id: selectedCrisisId ?? null,
-          start_date: data.start_date,
-          start_time: data.start_time ? toUtcTime(data.start_time) : data.start_time,
-          end_date: data.end_date,
-          end_time: data.end_time ? toUtcTime(data.end_time) : data.end_time,
+          ...(() => {
+            const start = data.start_time
+              ? toUtcDateTime(data.start_time, data.start_date)
+              : { date: data.start_date, time: data.start_time };
+            const end = data.end_time
+              ? toUtcDateTime(data.end_time, data.end_date || data.start_date)
+              : { date: data.end_date, time: data.end_time };
+            return {
+              start_date: start.date,
+              start_time: start.time,
+              end_date: end.date,
+              end_time: end.time,
+            };
+          })(),
         };
 
         const response = await updatePosting(id, payload);
@@ -604,10 +650,26 @@ function PostingPage() {
       title: posting.title,
       description: posting.description,
       location_name: posting.location_name,
-      start_date: getDateInputValue(posting.start_date),
-      start_time: getTimeInputValue(posting.start_time),
-      end_date: posting.end_date ? getDateInputValue(posting.end_date) : '',
-      end_time: getTimeInputValue(posting.end_time),
+      ...(() => {
+        const startUtcDate = getDateInputValue(posting.start_date);
+        const startUtcTime = getTimeInputValue(posting.start_time);
+        const start = startUtcTime
+          ? toLocalDateTime(startUtcTime, startUtcDate)
+          : { date: startUtcDate, time: startUtcTime };
+
+        const endUtcDate = posting.end_date ? getDateInputValue(posting.end_date) : '';
+        const endUtcTime = getTimeInputValue(posting.end_time);
+        const end = endUtcDate && endUtcTime
+          ? toLocalDateTime(endUtcTime, endUtcDate)
+          : { date: endUtcDate, time: endUtcTime };
+
+        return {
+          start_date: start.date,
+          start_time: start.time,
+          end_date: end.date,
+          end_time: end.time,
+        };
+      })(),
       max_volunteers: posting.max_volunteers?.toString() ?? '',
       minimum_age: posting.minimum_age?.toString() ?? '',
       automatic_acceptance: posting.automatic_acceptance,
@@ -1187,8 +1249,16 @@ function PostingPage() {
                                 shouldTouch: true,
                                 shouldValidate: true,
                               });
+                              if (endTime) {
+                                void form.trigger(['start_time', 'end_time']);
+                              } else {
+                                void form.trigger('start_time');
+                              }
                             }}
                           />
+                          {form.formState.errors.start_time?.message && (
+                            <p className="text-error text-sm mt-1">{form.formState.errors.start_time.message as string}</p>
+                          )}
                         </fieldset>
 
                         <fieldset className="fieldset w-full">
@@ -1205,8 +1275,16 @@ function PostingPage() {
                                 shouldTouch: true,
                                 shouldValidate: true,
                               });
+                              if (startTime) {
+                                void form.trigger(['start_time', 'end_time']);
+                              } else {
+                                void form.trigger('end_time');
+                              }
                             }}
                           />
+                          {form.formState.errors.end_time?.message && (
+                            <p className="text-error text-sm mt-1">{form.formState.errors.end_time.message as string}</p>
+                          )}
                         </fieldset>
                       </div>
                     </div>

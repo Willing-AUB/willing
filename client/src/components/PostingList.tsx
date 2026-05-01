@@ -7,6 +7,7 @@ import { DOMAIN_COLORS } from '../constants';
 import { formatCardDate, formatTime12Hour, hasPostingEnded, isPostingFullyBooked, normalizeTimestamp } from './postings/postingUtils';
 import useNow from './postings/useNow.ts';
 import SkillsList from './skills/SkillsList';
+import { toIsoDate, toLocalDateTime } from '../utils/timeUtils.ts';
 
 import type { PostingWithContext } from '../../../server/src/types';
 
@@ -44,13 +45,23 @@ function PostingList({
     [now, posting],
   );
 
-  const startDateStr = formatCardDate(startDt) || 'TBA';
-  const endDateStr = formatCardDate(endDt) || 'TBA';
-  const startTimeStr = formatTime12Hour(posting.start_time || '')
+  const startLocalDate = posting.start_time
+    ? toLocalDateTime(posting.start_time.slice(0, 5), toIsoDate(posting.start_date) ?? '')
+    : null;
+  const endLocalDate = posting.end_time && posting.end_date
+    ? toLocalDateTime(posting.end_time.slice(0, 5), toIsoDate(posting.end_date) ?? '')
+    : null;
+  const startDateStr = startLocalDate
+    ? formatCardDate(new Date(`${startLocalDate.date}T00:00:00Z`))
+    : (formatCardDate(startDt) || 'TBA');
+  const endDateStr = endLocalDate
+    ? formatCardDate(new Date(`${endLocalDate.date}T00:00:00Z`))
+    : (formatCardDate(endDt) || 'TBA');
+  const startTimeStr = formatTime12Hour(posting.start_time || '', toIsoDate(posting.start_date))
     || (startDt
       ? startDt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })
       : 'TBA');
-  const endTimeStr = formatTime12Hour(posting.end_time || '')
+  const endTimeStr = formatTime12Hour(posting.end_time || '', toIsoDate(posting.end_date ?? posting.start_date))
     || (endDt
       ? endDt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })
       : 'TBA');

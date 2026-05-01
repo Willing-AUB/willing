@@ -17,6 +17,7 @@ import {
   X,
   Users,
   User,
+  Award,
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
@@ -495,7 +496,7 @@ function VolunteerProfile() {
         actions={(
           <div className="flex flex-wrap gap-2 justify-end">
             <LinkButton to="/volunteer/certificate" color="secondary" className="btn btn-outline" size="sm">
-              <FileText size={16} />
+              <Award size={16} />
               Generate Certificate
             </LinkButton>
             {isEditMode

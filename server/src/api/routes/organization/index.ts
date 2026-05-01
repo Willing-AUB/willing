@@ -43,21 +43,6 @@ import { getVolunteerProfile } from '../../../services/volunteer/index.ts';
 import { normalizeSearchTerms } from '../utils/postingList.js';
 import { canRecomputeProfileVector } from '../utils/rateLimit.ts';
 
-const organizationProfileResponseColumns = [
-  'id',
-  'name',
-  'email',
-  'phone_number',
-  'url',
-  'description',
-  'latitude',
-  'longitude',
-  'location_name',
-  'logo_path',
-  'created_at',
-  'updated_at',
-] as const;
-
 const organizationPrivateResponseColumns = [
   'id',
   'name',
@@ -288,8 +273,14 @@ function createOrganizationRouter(db: Kysely<Database>) {
 
     const organization = await db
       .selectFrom('organization_account')
-      .select([...organizationProfileResponseColumns, 'is_deleted', 'is_disabled'])
-      .where('id', '=', orgId)
+      .leftJoin(
+        'organization_certificate_info',
+        'organization_certificate_info.id',
+        'organization_account.certificate_info_id',
+      )
+      .selectAll('organization_account')
+      .select(['organization_certificate_info.hours_threshold'])
+      .where('organization_account.id', '=', orgId)
       .executeTakeFirst();
 
     if (!organization) {

@@ -195,6 +195,24 @@ describe('Organization index routes', () => {
       })
       .execute();
 
+    const certificateInfo = await transaction
+      .insertInto('organization_certificate_info')
+      .values({
+        certificate_feature_enabled: true,
+        hours_threshold: 4,
+        signatory_name: null,
+        signatory_position: null,
+        signature_path: null,
+      })
+      .returning('id')
+      .executeTakeFirstOrThrow();
+
+    await transaction
+      .updateTable('organization_account')
+      .set({ certificate_info_id: certificateInfo.id })
+      .where('id', '=', organization.id)
+      .execute();
+
     const response = await server
       .get(`/organization/${organization.id}`)
       .expect(200);
@@ -203,6 +221,7 @@ describe('Organization index routes', () => {
       id: organization.id,
       name: organization.name,
       email: organization.email,
+      hours_threshold: 4,
     });
     expect(response.body.postings).toHaveLength(1);
     expect(response.body.postings[0]).toMatchObject({

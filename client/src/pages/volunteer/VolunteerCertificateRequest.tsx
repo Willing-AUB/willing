@@ -2,6 +2,7 @@ import {
   AlertCircle,
   Award,
   Building,
+  Clock,
   Download,
   FileText,
   Users,
@@ -237,7 +238,7 @@ function VolunteerCertificateRequest() {
             <StatCard
               text="Total Volunteering Hours"
               content={formatHours(totalHours)}
-              icon={Award}
+              icon={Clock}
               color="primary"
             />
             <StatCard
