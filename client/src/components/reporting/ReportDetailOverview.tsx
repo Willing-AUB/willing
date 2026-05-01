@@ -34,9 +34,9 @@ function ReportDetailOverview({
   reporterIcon: ReporterIcon,
 }: ReportDetailOverviewProps) {
   return (
-    <Card className="border-[#E5E7EB] shadow-[0_1px_3px_rgba(0,0,0,0.06)] bg-white">
+    <Card className="border-base-200 shadow-sm bg-base-100">
       <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
-        <div className="flex items-center gap-2 text-base font-bold text-slate-900">
+        <div className="flex items-center gap-2 text-base font-bold text-base-content">
           <FileText size={20} className="text-primary shrink-0" />
           <span>Report Overview</span>
         </div>
@@ -45,34 +45,34 @@ function ReportDetailOverview({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <p className="text-xs text-slate-500 mb-1">Report ID</p>
-          <p className="text-sm font-semibold text-slate-900">
+          <p className="text-xs text-base-content/70 mb-1">Report ID</p>
+          <p className="text-sm font-semibold text-base-content">
             #
             {reportId}
           </p>
         </div>
         <div>
-          <p className="text-xs text-slate-500 mb-1">Reported On</p>
-          <p className="text-sm font-semibold text-slate-900">{formatReportedDate(createdAt)}</p>
+          <p className="text-xs text-base-content/70 mb-1">Reported On</p>
+          <p className="text-sm font-semibold text-base-content">{formatReportedDate(createdAt)}</p>
         </div>
       </div>
 
-      <hr className="border-t border-slate-200 my-4" />
+      <hr className="border-t border-base-200 my-4" />
 
-      <div className="flex items-center gap-2 mb-5 text-base font-bold text-slate-900">
+      <div className="flex items-center gap-2 mb-5 text-base font-bold text-base-content">
         <MessageCircle size={20} className="text-primary shrink-0" />
         <span>Message</span>
       </div>
       <ReportMessage className="min-h-0" message={message} />
 
-      <hr className="border-t border-slate-200 my-4" />
+      <hr className="border-t border-base-200 my-4" />
 
-      <div className="flex items-center gap-2 mb-5 text-base font-bold text-slate-900">
+      <div className="flex items-center gap-2 mb-5 text-base font-bold text-base-content">
         <ReporterIcon size={20} className="text-primary shrink-0" />
         <span>{reporterTitle}</span>
       </div>
-      <p className="text-base font-semibold text-slate-900">{reporterName}</p>
-      <p className="text-sm text-slate-500">{reporterEmail}</p>
+      <p className="text-base font-semibold text-base-content">{reporterName}</p>
+      <p className="text-sm text-base-content/70">{reporterEmail}</p>
     </Card>
   );
 }
