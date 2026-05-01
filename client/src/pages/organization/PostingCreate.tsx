@@ -260,6 +260,9 @@ export default function PostingCreate() {
                         });
                       }}
                     />
+                    {form.formState.errors.start_time?.message && (
+                      <p className="text-error text-sm mt-1">{form.formState.errors.start_time.message as string}</p>
+                    )}
                   </fieldset>
 
                   <fieldset className="fieldset w-full">
@@ -278,6 +281,9 @@ export default function PostingCreate() {
                         });
                       }}
                     />
+                    {form.formState.errors.end_time?.message && (
+                      <p className="text-error text-sm mt-1">{form.formState.errors.end_time.message as string}</p>
+                    )}
                   </fieldset>
                 </div>
 

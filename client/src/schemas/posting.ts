@@ -17,6 +17,10 @@ const notPastDate = (date: string, ctx: z.RefinementCtx, field: string, label: s
   }
 };
 
+const isTimeOrderValid = (startTime: string, endTime: string) => {
+  return !startTime || !endTime || endTime > startTime;
+};
+
 export const postingFormSchema = newPostingSchema
   .omit({
     crisis_id: true,
@@ -44,6 +48,14 @@ export const postingFormSchema = newPostingSchema
   .superRefine((data, ctx) => {
     notPastDate(data.start_date, ctx, 'start_date', 'Start date');
     notPastDate(data.end_date, ctx, 'end_date', 'End date');
+
+    if (!isTimeOrderValid(data.start_time, data.end_time)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'End time cannot be before or equal to start time',
+        path: ['end_time'],
+      });
+    }
   });
 
 export type PostingFormData = z.infer<typeof postingFormSchema>;
@@ -74,6 +86,14 @@ export const postingEditFormSchema = newPostingSchema
   .superRefine((data, ctx) => {
     notPastDate(data.start_date, ctx, 'start_date', 'Start date');
     notPastDate(data.end_date, ctx, 'end_date', 'End date');
+
+    if (!isTimeOrderValid(data.start_time, data.end_time)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'End time cannot be before or equal to start time',
+        path: ['end_time'],
+      });
+    }
   });
 
 export type PostingEditFormData = z.infer<typeof postingEditFormSchema>;
