@@ -5,6 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Alert from '../../components/Alert';
 import Button from '../../components/Button';
 import Card from '../../components/Card';
+import ColumnLayout from '../../components/layout/ColumnLayout';
 import PageContainer from '../../components/layout/PageContainer';
 import PageHeader from '../../components/layout/PageHeader';
 import Loading from '../../components/Loading';
@@ -132,8 +133,23 @@ function AdminReportDetail() {
         defaultBackTo="/admin/reports"
       />
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-6">
+      <ColumnLayout
+        sidebar={(
+          <Card title="Actions" description="Disable account or delete report without disabling." color="primary">
+            <ReportActionPanel
+              actionError={actionError}
+              isActionInProgress={isActionInProgress}
+              onAccept={() => { void handleAcceptReport(); }}
+              onReject={() => { void handleRejectReport(); }}
+              acceptLabel="Disable Account"
+              rejectLabel="Delete Report"
+              warningMessage="Disabling an account also resolves the report."
+              confirmDisableMessage="Are you sure? This will disable the reported account and resolve this report."
+            />
+          </Card>
+        )}
+      >
+        <div className="space-y-6">
           <ReportDetailOverview
             reportId={report.id}
             createdAt={report.created_at}
@@ -167,22 +183,7 @@ function AdminReportDetail() {
                 />
               )}
         </div>
-
-        <div className="lg:col-span-1">
-          <Card title="Actions" description="Disable account or delete report without disabling." color="primary">
-            <ReportActionPanel
-              actionError={actionError}
-              isActionInProgress={isActionInProgress}
-              onAccept={() => { void handleAcceptReport(); }}
-              onReject={() => { void handleRejectReport(); }}
-              acceptLabel="Disable Account"
-              rejectLabel="Delete Report"
-              warningMessage="Disabling an account also resolves the report."
-              confirmDisableMessage="Are you sure? This will disable the reported account and resolve this report."
-            />
-          </Card>
-        </div>
-      </div>
+      </ColumnLayout>
     </PageContainer>
   );
 }
