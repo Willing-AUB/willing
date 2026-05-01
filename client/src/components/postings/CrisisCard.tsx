@@ -8,7 +8,7 @@ import type { Crisis } from '../../../../server/src/db/tables/index.ts';
 
 type CrisisCardProps = {
   crisis: Crisis;
-  link?: string;
+  link?: string | null;
   descriptionFallback?: string;
   right?: ReactNode;
   children?: ReactNode;
@@ -28,7 +28,7 @@ function CrisisCard({
       color={DOMAIN_COLORS.crisis}
       coloredText={true}
       Icon={AlertTriangle}
-      link={link ?? `/volunteer/crises/${crisis.id}/postings`}
+      link={link === undefined ? `/volunteer/crises/${crisis.id}/postings` : link ?? undefined}
       right={right ?? (crisis.pinned
         ? <Pin size={16} className={`text-${DOMAIN_COLORS.crisis}`} />
         : undefined)}

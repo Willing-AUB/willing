@@ -498,7 +498,7 @@ function AdminCrises() {
                       <CrisisCard
                         key={crisis.id}
                         crisis={crisis}
-                        link={undefined}
+                        link={null}
                         descriptionFallback={editingCrisisId === crisis.id ? '' : 'No description set'}
                       >
 
