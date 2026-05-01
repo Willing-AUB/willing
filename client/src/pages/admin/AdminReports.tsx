@@ -168,7 +168,7 @@ function AdminReports() {
 
       <ColumnLayout
         sidebar={(
-          <Card Icon={SlidersHorizontal} title="Filters" description="Filter and sort reports before review." color="neutral">
+          <Card Icon={SlidersHorizontal} iconClassName="text-current" title="Filters" description="Filter and sort reports before review." color="neutral">
             <form className="space-y-4" onSubmit={applyFilters}>
               <div className="space-y-4">
                 <div>

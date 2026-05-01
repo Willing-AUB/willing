@@ -109,11 +109,7 @@ function PostingFiltersCard<T extends FieldValues>({
   const hasExtraFieldsContent = extraFieldsContent !== null;
 
   return (
-    <Card>
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold">{title}</h3>
-      </div>
-
+    <Card Icon={SlidersHorizontal} iconClassName="text-current" title={title}>
       {topContent && (
         <div className="mb-4 w-full">
           {topContent}
