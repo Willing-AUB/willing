@@ -1249,6 +1249,11 @@ function PostingPage() {
                                 shouldTouch: true,
                                 shouldValidate: true,
                               });
+                              if (endTime) {
+                                void form.trigger(['start_time', 'end_time']);
+                              } else {
+                                void form.trigger('start_time');
+                              }
                             }}
                           />
                           {form.formState.errors.start_time?.message && (
@@ -1270,6 +1275,11 @@ function PostingPage() {
                                 shouldTouch: true,
                                 shouldValidate: true,
                               });
+                              if (startTime) {
+                                void form.trigger(['start_time', 'end_time']);
+                              } else {
+                                void form.trigger('end_time');
+                              }
                             }}
                           />
                           {form.formState.errors.end_time?.message && (
