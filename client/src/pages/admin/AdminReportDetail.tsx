@@ -126,6 +126,7 @@ function AdminReportDetail() {
     <PageContainer>
       <PageHeader
         title={reportType === 'organization' ? 'Organization Report' : 'Volunteer Report'}
+        subtitle="Review the report details, reporter information, and resolve the report."
         icon={Flag}
         showBack
         defaultBackTo="/admin/reports"
