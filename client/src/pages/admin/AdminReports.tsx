@@ -1,4 +1,4 @@
-import { Flag, RotateCcw } from 'lucide-react';
+import { Building2, Flag, RotateCcw, User } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 
 import Alert from '../../components/Alert';
@@ -298,7 +298,7 @@ function AdminReports() {
                             createdAt={report.created_at}
                             reportTitle={report.title}
                             subjectName={subjectName}
-                            scopeLabel={type === 'organization' ? 'Organization' : 'Volunteer'}
+                            Icon={type === 'organization' ? Building2 : User}
                           />
                           <ReportMessage message={report.message} className="mb-3" />
                           <div className="mt-auto">
