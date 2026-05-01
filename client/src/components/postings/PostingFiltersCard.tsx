@@ -1,4 +1,4 @@
-import { RotateCcw, Search, SlidersHorizontal, type LucideIcon } from 'lucide-react';
+import { ChevronDown, ChevronUp, RotateCcw, Search, SlidersHorizontal, type LucideIcon } from 'lucide-react';
 import { type ReactNode, useEffect, useRef, useMemo, useState } from 'react';
 import { useForm, useWatch, type DefaultValues, type FieldValues, type Path, type UseFormReturn } from 'react-hook-form';
 
@@ -157,7 +157,7 @@ function PostingFiltersCard<T extends FieldValues>({
               type="button"
               color={hasAdvancedFiltersApplied || showAdvancedSearch ? 'secondary' : 'ghost'}
               onClick={() => setShowAdvancedSearch(prev => !prev)}
-              Icon={SlidersHorizontal}
+              Icon={showAdvancedSearch ? ChevronUp : ChevronDown}
             >
               Advanced Search
             </Button>
