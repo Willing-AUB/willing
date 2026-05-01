@@ -1,4 +1,4 @@
-import { Building2, Flag, RotateCcw, User } from 'lucide-react';
+import { Building2, Flag, RotateCcw, SlidersHorizontal, User } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 
 import Alert from '../../components/Alert';
@@ -168,7 +168,7 @@ function AdminReports() {
 
       <ColumnLayout
         sidebar={(
-          <Card title="Filters" description="Filter and sort reports before review." color="info">
+          <Card Icon={SlidersHorizontal} title="Filters" description="Filter and sort reports before review." color="neutral">
             <form className="space-y-4" onSubmit={applyFilters}>
               <div className="space-y-4">
                 <div>
