@@ -154,7 +154,7 @@ function AdminReportDetail() {
                   title="Reported Organization"
                   name={report.reported_organization.name}
                   email={report.reported_organization.email}
-                  Icon={User}
+                  Icon={Building2}
                 />
               )
             : (
